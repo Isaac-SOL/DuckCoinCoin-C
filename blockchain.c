@@ -41,7 +41,7 @@ struct s_blockchain {
 /*
  * Initialisation d'une Blockchain.
  */
-void blockchain(Blockchain bc) {
+void blockchain(Blockchain *bc) {
 	bc->blockCount = 0;
 	bc->blocks = NULL;
 }
@@ -49,7 +49,7 @@ void blockchain(Blockchain bc) {
 /*
  * Initialisation d'un bloc.
  */
-void block(Block b) {
+void block(Block *b) {
 
 	b->nonce = 0;
 }
@@ -57,17 +57,17 @@ void block(Block b) {
 /* Définir la difficulté d'une Blockchain
  * int diff :	Nouvelle difficulté
  */
-void difficulty(Blockchain bc, int diff) {
+void difficulty(Blockchain *bc, int diff) {
 	bc->difficulty = diff;
 }
 
 /* Renvoie le hash du block sur 32 octets
  * char *hash :	Reçoit le hash du bloc en sortie
  */
-void getBlockHash(Block b, char hash[SHA256_BLOCK_SIZE]) {
+void getBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE]) {
 	SHA256_CTX ctx;
 	sha256_init(&ctx);
-	sha256_update(&ctx, (BYTE *) b, sizeof(struct s_block));
+	sha256_update(&ctx, (BYTE *) b, sizeof(Block));
 	sha256_final(&ctx, (BYTE *) hash);
 }
 
@@ -86,7 +86,7 @@ int verifyHash(char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * char *hash :		Renvoie le hash du bloc une fois la nonce trouvée
  * int difficulty :	Difficulté de la blockchain
  */
-void updateNonce(Block b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
+void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
 	getBlockHash(b, hash);
 	while (!verifyHash(hash, difficulty)) {
 		(b->nonce)++;
@@ -94,7 +94,11 @@ void updateNonce(Block b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
 	}
 }
 
-void copyTransactions(TransactionBlock tb, Block b) {
+/* Copie les transactions depuis une liste vers un block
+ * TransactionBlock *tb :	Liste des transactions à copier
+ * Block *b :				Block dans lequel copier
+ */
+void copyTransactions(TransactionBlock *tb, Block *b) {
 	b->transactionCount = tb->transactionCount;
 	for (int i = 0; i < tb->transactionCount; i++)
 		memcpy(b->transactions[i], tb->data[i], TRANSACTION_LEN);
@@ -103,7 +107,7 @@ void copyTransactions(TransactionBlock tb, Block b) {
 /*
  * Ajoute un bloc à la Blockchain.
  */
-void addBlock(Blockchain bc, Block b) {
+void addBlock(Blockchain *bc, Block *b) {
 
 	//Finalisation des informations du bloc
 	if (bc->blocks == NULL) {

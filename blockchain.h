@@ -10,28 +10,28 @@
 
 #include "sha256/sha256.h"
 
-typedef struct s_blockchain *Blockchain;
-typedef struct s_block *Block;
+typedef struct s_blockchain Blockchain;
+typedef struct s_block Block;
 
 /*
  * Initialisation d'une Blockchain.
  */
-void blockchain(Blockchain bc);
+void blockchain(Blockchain *bc);
 
 /*
  * Initialisation d'un bloc.
  */
-void block(Block b);
+void block(Block *b);
 
 /* Définir la difficulté d'une Blockchain
  * int diff :	Nouvelle difficulté
  */
-void difficulty(Blockchain bc, int diff);
+void difficulty(Blockchain *bc, int diff);
 
 /* Renvoie le hash du block sur 32 octets
  * char *hash :	Reçoit le hash du bloc en sortie
  */
-void getBlockHash(Block b, char hash[SHA256_BLOCK_SIZE]);
+void getBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE]);
 
 /* Vérifie que le hash reçu corresponde bien à la difficulté
  * char *hash :		Hash à vérifier
@@ -43,11 +43,17 @@ int verifyHash(char hash[SHA256_BLOCK_SIZE], int difficulty);
  * char *hash :		Renvoie le hash du bloc une fois la nonce trouvée
  * int difficulty :	Difficulté de la blockchain
  */
-void updateNonce(Block b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+
+/* Copie les transactions depuis une liste vers un block
+ * TransactionBlock *tb :	Liste des transactions à copier
+ * Block *b :				Block dans lequel copier
+ */
+void copyTransactions(TransactionBlock tb, Block *b);
 
 /*
  * Ajoute un bloc à la Blockchain.
  */
-void addBlock(Blockchain bc, Block b);
+void addBlock(Blockchain *bc, Block *b);
 
 #endif /* BLOCKCHAIN_H_ */

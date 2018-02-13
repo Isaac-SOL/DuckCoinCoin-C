@@ -13,15 +13,24 @@ struct s_transactionBlock {
 	char **data;
 };
 
-void transactionBlock(TransactionBlock tb) {
+/*
+ * Initialisation d'une liste de transactions.
+ */
+void transactionBlock(TransactionBlock *tb) {
 	tb->transactionCount = 0;
 }
 
-void addTransaction(TransactionBlock tb, char t[TRANSACTION_LEN]) {
+/*
+ * Ajout d'une transaction dans la liste
+ */
+void addTransaction(TransactionBlock *tb, char t[TRANSACTION_LEN]) {
 	tb->data[tb->transactionCount] = t;
 }
 
-void merkleRoot(TransactionBlock tb, char hash[SHA256_BLOCK_SIZE]) {
+/*
+ * Calcul de la merkle root de la liste de transactions
+ */
+void merkleRoot(TransactionBlock *tb, char hash[SHA256_BLOCK_SIZE]) {
 
 	char merkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
 	char nextMerkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
