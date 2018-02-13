@@ -24,9 +24,14 @@ struct s_block {
 	int transactionCount;
 	char transactions[MAX_TRANSACTIONS][TRANSACTION_LEN];
 	char merkleRoot[SHA256_BLOCK_SIZE];
-	char thisHash[SHA256_BLOCK_SIZE];
 	int nonce;
 };
+
+typedef struct s_chainElem {
+	Block block;
+	char blockHash[SHA256_BLOCK_SIZE];
+	struct s_chainElem *prev;
+} ChainElement;
 
 /*
  * Structure de données représentant la Blockchain
@@ -34,8 +39,7 @@ struct s_block {
 struct s_blockchain {
 	int difficulty;
 	int blockCount;
-	Block *blocks;
-	char lastBlockHash[SHA256_BLOCK_SIZE];
+	ChainElement *last;
 };
 
 /*
@@ -43,7 +47,7 @@ struct s_blockchain {
  */
 void blockchain(Blockchain *bc) {
 	bc->blockCount = 0;
-	bc->blocks = NULL;
+	bc->last = NULL;
 }
 
 /*
@@ -107,32 +111,28 @@ void copyTransactions(TransactionBlock *tb, Block *b) {
 /*
  * Ajoute un bloc à la Blockchain.
  */
-void addBlock(Blockchain *bc, Block *b) {
+void addBlock(Blockchain *bc, ChainElement *ce) {
+
+	Block *b = ce->block;
 
 	//Finalisation des informations du bloc
-	if (bc->blocks == NULL) {
-		//Informations pour le bloc génésis
-		bc->blocks = (Block *) malloc(sizeof(Block));
-		if(bc->blocks == NULL) {
-			printf("Erreur d'allocation mémoire pour un Bloc.\n");
-			exit(1);
-		}
+	if (bc->last == NULL) {
 		//Nettoyage du hash car il n'y a pas de bloc précédent
 		for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
 			b->previousHash[i] = '\0';
 	} else {
 		//Informations pour les blocs suivants
-		memcpy(b->previousHash, bc->lastBlockHash, SHA256_BLOCK_SIZE);
+		memcpy(b->previousHash, bc->last->blockHash, SHA256_BLOCK_SIZE);
 	}
 	b->index = bc->blockCount;
 	//b->timestamp = ???
 
 	//Calcul du hash
-	updateNonce(b, bc->lastBlockHash, bc->difficulty);
+	updateNonce(b, ce->blockHash, bc->difficulty);
 
 	//Ajout du bloc à la blockchain
-	bc->blocks = (Block *) realloc(bc->blocks, (bc->blockCount + 1) * sizeof(Block));
-	bc->blocks[bc->blockCount] = b;
+	ce->prev = bc->last;
+	bc->last = ce;
 	(bc->blockCount)++;
 
 }
