@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "sha256/sha256.h"
-#include "sha256/sha256_utils.h"
 #include "blockchain.h"
 #include "transaction.h"
 
