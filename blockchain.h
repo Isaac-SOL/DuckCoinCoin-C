@@ -9,6 +9,7 @@
 #define BLOCKCHAIN_H_
 
 #include "sha256/sha256.h"
+#include "transaction.h"
 
 typedef struct s_blockchain Blockchain;
 typedef struct s_block Block;
@@ -49,7 +50,7 @@ void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
  * TransactionBlock *tb :	Liste des transactions à copier
  * Block *b :				Block dans lequel copier
  */
-void copyTransactions(TransactionBlock tb, Block *b);
+void copyTransactions(TransactionBlock *tb, Block *b);
 
 /*
  * Ajoute un bloc à la Blockchain.

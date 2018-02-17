@@ -27,7 +27,7 @@ struct s_block {
 };
 
 typedef struct s_chainElem {
-	Block block;
+	Block *block;
 	char blockHash[SHA256_BLOCK_SIZE];
 	struct s_chainElem *prev;
 } ChainElement;
@@ -80,7 +80,7 @@ void getBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE]) {
  */
 int verifyHash(char hash[SHA256_BLOCK_SIZE], int difficulty) {
 	for (int i = 0; i < difficulty; i++)
-		if (hash != '0')
+		if (hash[i] != '0')
 			return 0;
 	return 1;
 }
@@ -102,17 +102,18 @@ void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * Block *b :				Block dans lequel copier
  */
 void copyTransactions(TransactionBlock *tb, Block *b) {
-	b->transactionCount = tb->transactionCount;
-	for (int i = 0; i < tb->transactionCount; i++)
-		memcpy(b->transactions[i], tb->data[i], TRANSACTION_LEN);
+	b->transactionCount = getTransactionCount(tb);
+	for (int i = 0; i < b->transactionCount; i++)
+		memcpy(b->transactions[i], getTransactionAt(tb,i), TRANSACTION_LEN);
 }
 
 /*
  * Ajoute un bloc à la Blockchain.
  */
-void addBlock(Blockchain *bc, ChainElement *ce) {
+void addBlock(Blockchain *bc, Block *b) {
 
-	Block *b = ce->block;
+	ChainElement *ce = malloc(sizeof(ChainElement));
+	ce->block = b;
 
 	//Finalisation des informations du bloc
 	if (bc->last == NULL) {

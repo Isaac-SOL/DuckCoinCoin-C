@@ -6,6 +6,7 @@
  */
 
 #include "transaction.h"
+#include "string.h"
 #include "sha256/sha256.h"
 
 struct s_transactionBlock {
@@ -18,6 +19,25 @@ struct s_transactionBlock {
  */
 void transactionBlock(TransactionBlock *tb) {
 	tb->transactionCount = 0;
+}
+
+/**
+ * Renvoie le nombre de transactions.
+ * @param tb Block de transactions à lire
+ * @return Nombre de transactions
+ */
+int getTransactionCount(TransactionBlock *tb) {
+	return tb->transactionCount;
+}
+
+/**
+ * Renvoie la transaction présente à l'index donné.
+ * @param tb Block de transactions à lire
+ * @param i Index de la transaction
+ * @return Transaction à l'index i
+ */
+char *getTransactionAt(TransactionBlock *tb, int i) {
+	return tb->data[i];
 }
 
 /*
