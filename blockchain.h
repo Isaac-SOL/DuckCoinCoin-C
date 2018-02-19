@@ -14,46 +14,59 @@
 typedef struct s_blockchain Blockchain;
 typedef struct s_block Block;
 
-/*
+/**
  * Initialisation d'une Blockchain.
+ * @param bc Pointeur vers la blockchain à initialiser
  */
 void blockchain(Blockchain *bc);
 
-/*
- * Initialisation d'un bloc.
+/**
+ * Initialisation d'un block.
+ * @param b Pointeur vers le block à initialiser
  */
 void block(Block *b);
 
-/* Définir la difficulté d'une Blockchain
- * int diff :	Nouvelle difficulté
+/**
+ * Définir la difficulté d'une Blockchain.
+ * @param bc Pointeur vers la blockchain à modifier
+ * @param diff Nouvelle difficulté
  */
 void difficulty(Blockchain *bc, int diff);
 
-/* Renvoie le hash du block sur 32 octets
- * char *hash :	Reçoit le hash du bloc en sortie
+/**
+ * Ajoute une transaction à la liste de transactions d'un block.
+ * @param b Pointeur vers le block à modifier
+ * @param transaction Transaction à ajouter
  */
-void getBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE]);
+void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]);
 
-/* Vérifie que le hash reçu corresponde bien à la difficulté
- * char *hash :		Hash à vérifier
- * int difficulty :	Difficulté de la blockchain
+/**
+ * Renvoie le hash du block donné sur 32 octets.
+ * @param b Pointeur vers le block à modifier
+ * @param hash Reçoit le hash du bloc en sortie
  */
-int verifyHash(char hash[SHA256_BLOCK_SIZE], int difficulty);
+void getBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]);
 
-/* Incrémente la nonce du bloc jusqu'à ce que son hash corresponde à la difficulté
- * char *hash :		Renvoie le hash du bloc une fois la nonce trouvée
- * int difficulty :	Difficulté de la blockchain
+/**
+ * Vérifie que le hash reçu corresponde bien à la difficulté.
+ * @param hash Hash à vérifier
+ * @param difficulty Difficulté à satisfaire
+ * @return Booléen, renvoie true si le hash correspond, false sinon.
+ */
+int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty);
+
+/**
+ * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficulté.
+ * @param b Pointeur vers le block à modifier
+ * @param hash Renvoie le hash du bloc une fois la nonce trouvée
+ * @param difficulty Difficulté de la blockchain
  */
 void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
 
-/* Copie les transactions depuis une liste vers un block
- * TransactionBlock *tb :	Liste des transactions à copier
- * Block *b :				Block dans lequel copier
- */
-void copyTransactions(TransactionBlock *tb, Block *b);
-
-/*
- * Ajoute un bloc à la Blockchain.
+/**
+ * Ajoute un block à une Blockchain.
+ * @param bc Pointeur vers la blockchain à modifier
+ * @param b Block à ajouter
  */
 void addBlock(Blockchain *bc, Block *b);
 

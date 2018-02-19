@@ -9,60 +9,69 @@
 #include "string.h"
 #include "sha256/sha256.h"
 
-struct s_transactionBlock {
-	int transactionCount;
-	char **data;
-};
-
-/*
- * Initialisation d'une liste de transactions.
+/**
+ * Initialisation d'un TransactionBlock.
+ * @param tb Pointeur vers le TransactionBlock à initialiser
  */
 void transactionBlock(TransactionBlock *tb) {
-	tb->transactionCount = 0;
+	tb->count = 0;
 }
 
 /**
- * Renvoie le nombre de transactions.
- * @param tb Block de transactions à lire
+ * Ajout d'une transaction à un TransactionBlock.
+ * @param tb Pointeur vers le TransactionBlock à modifier
+ * @param transaction Transaction à ajouter
+ */
+void addTransaction(TransactionBlock *tb, const char transaction[TRANSACTION_LEN]) {
+	memcpy(tb->data + tb->count, transaction, TRANSACTION_LEN);
+}
+
+/**
+ * Vérifie si le TransactionBlock est plein
+ * @param tb Pointeur vers le TransactionBlock à vérifier
+ * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
+ */
+int isFull(const TransactionBlock *tb) {
+	return tb->count == MAX_TRANSACTIONS;
+}
+
+/**
+ * Renvoie le nombre de transactions dans un TransactionBlock.
+ * @param tb Pointeur vers le TransactionBlock à lire
  * @return Nombre de transactions
  */
-int getTransactionCount(TransactionBlock *tb) {
-	return tb->transactionCount;
-}
+int getTransactionCount(const TransactionBlock *tb) {
+	return tb->count;
+}	//TODO voir si ça sert vraiment à quelque chose
 
 /**
  * Renvoie la transaction présente à l'index donné.
- * @param tb Block de transactions à lire
+ * @param tb Pointeur vers le TransactionBlock à lire
  * @param i Index de la transaction
  * @return Transaction à l'index i
  */
-char *getTransactionAt(TransactionBlock *tb, int i) {
+const char *getTransactionAt(const TransactionBlock *tb, int i) {
 	return tb->data[i];
-}
+}	//TODO voir si ça sert vraiment à quelque chose
 
-/*
- * Ajout d'une transaction dans la liste
+/**
+ * Calcul de la merkle root d'un TransactionBlock.
+ * @param tb Pointeur vers le TransactionBlock à lire
+ * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void addTransaction(TransactionBlock *tb, char t[TRANSACTION_LEN]) {
-	tb->data[tb->transactionCount] = t;
-}
-
-/*
- * Calcul de la merkle root de la liste de transactions
- */
-void merkleRoot(TransactionBlock *tb, char hash[SHA256_BLOCK_SIZE]) {
+void merkleRoot(const TransactionBlock *tb, char root[SHA256_BLOCK_SIZE]) {
 
 	char merkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
 	char nextMerkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
-	for (int i = 0; i < tb->transactionCount; i++) {
+	for (int i = 0; i < tb->count; i++) {
 		SHA256_CTX ctx;
 		sha256_init(&ctx);
 		sha256_update(&ctx, (BYTE *) tb->data[i], TRANSACTION_LEN);
 		sha256_final(&ctx, (BYTE *) merkleTree[i]);
 	}
 
-	int len = tb->transactionCount;
-	while (len > 1) {
+	int len = tb->count;
+	while (len > 1) {	//TODO optimiser cette partie (pas de memcpy nécessaire dans tous les cas)
 		for (int i = 0; i < len; i += 2) {
 			char concat[SHA256_BLOCK_SIZE * 2];
 			if (i - len == 1) {
@@ -81,5 +90,5 @@ void merkleRoot(TransactionBlock *tb, char hash[SHA256_BLOCK_SIZE]) {
 		memcpy(merkleTree, nextMerkleTree, sizeof(merkleTree));
 	}
 
-	memcpy(hash, merkleTree[0], SHA256_BLOCK_SIZE);
-}
+	memcpy(root, merkleTree[0], SHA256_BLOCK_SIZE);
+}	//TODO tout ceci m'a l'air bien dégueulasse
