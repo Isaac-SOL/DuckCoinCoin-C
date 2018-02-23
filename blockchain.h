@@ -11,6 +11,8 @@
 #include "sha256/sha256.h"
 #include "transaction.h"
 
+#define TIMESTAMP_LEN 30
+
 typedef struct s_blockchain Blockchain;
 typedef struct s_block Block;
 
@@ -25,6 +27,16 @@ void blockchain(Blockchain *bc);
  * @param b Pointeur vers le block à initialiser
  */
 void block(Block *b);
+
+/**
+ * Return date a l appel de la fonction.
+ */
+char * getTimeStamp();
+
+/**
+ * Initialise le timestamp au block b.
+ */
+void setTimeStamp(Block *b);
 
 /**
  * Définir la difficulté d'une Blockchain.
