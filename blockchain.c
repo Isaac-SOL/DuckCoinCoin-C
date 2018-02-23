@@ -154,7 +154,7 @@ void addBlock(Blockchain *bc, Block *b) {
 
 	//Finalisation des informations du bloc
 	if (bc->last == NULL) {
-		//Nettoyage du hash car il n'y a pas de bloc prÃ©cÃ©dent
+		//Nettoyage du hash car il n'y a pas de bloc précédent
 		for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
 			b->previousHash[i] = '\0';
 	} else {
@@ -167,7 +167,7 @@ void addBlock(Blockchain *bc, Block *b) {
 	//Calcul du hash
 	updateNonce(b, ce->blockHash, bc->difficulty);
 
-	//Ajout du bloc Ã  la blockchain
+	//Ajout du bloc à la blockchain
 	ce->prev = bc->last;
 	bc->last = ce;
 	(bc->blockCount)++;
