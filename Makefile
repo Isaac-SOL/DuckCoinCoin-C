@@ -1,23 +1,52 @@
+CC=gcc
 OPT=-Wall -std=c99
-OPTM=-lm
+OPTL=
 EXEC=duck_coin_coin
-OUTPUTDIR=compiled
+COMPILDIR=compiled
+OUTPUTDIR=bin
+
+SRC=$(wildcard *.c)
+HDR=$(wildcard *.h)
+OBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(SRC))
+SHASRC=$(wildcard sha256/*.c)
+SHAOBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(SHASRC))
+
+#Options conditionnelles pour le débug
+ifeq ($(DEBUG),yes)
+	OPT += -g
+else
+	OPT += -O3 -DNDEBUG
+endif
+
+.PHONY: clean mrproper doc
 
 #Création de l'exécutable
-all: $(EXEC)
+all: $(OUTPUTDIR)/$(EXEC)
 
+#Création de la documentation
+doc:
+	doxygen documentation/DCC
 
-$(OUTPUTDIR)/sha256.o: sha256/sha256.c sha256/sha256.h
-	$(CC) $(OPT) sha256/sha256.c -c -o $(OUTPUTDIR)/sha256.o
+#Création des fichiers avant édition de liens
+$(COMPILDIR)/%.o: %.c
+	$(CC) $(OPT) -c $< -o $@
 
-$(OUTPUTDIR)/blockchain.o: blockchain.c blockchain.h sha256/sha256.h transaction.h
-	$(CC) $(OPT) blockchain.c -c -o $(OUTPUTDIR)/blockchain.o
+#Création de l'exécutable
+$(OUTPUTDIR)/$(EXEC): $(OBJ) $(SHAOBJ)
+	$(CC) $(OPT) -o $@ $^ $(OPTL)
 
-$(OUTPUTDIR)/transaction.o: transaction.c transaction.h sha256/sha256.h
-	$(CC) $(OPT) transaction.c -c -o $(OUTPUTDIR)/transaction.o
+#Nettoyage
+clean:
+	rm -rf $(COMPILDIR)/*.o
 
-$(OUTPUTDIR)/main.o: main.c blockchain.h sha256/sha256.h transaction.h
-	$(CC) $(OPT) main.c -c -o $(OUTPUTDIR)/main.o
+mrproper: clean
+	rm -rf $(OUTPUTDIR)/$(EXEC)
 
-$(EXEC): $(OUTPUTDIR)/main.o $(OUTPUTDIR)/blockchain.o $(OUTPUTDIR)/sha256.o $(OUTPUTDIR)/transaction.o
-	$(CC) $(OPT) $(OUTPUTDIR)/main.o $(OUTPUTDIR)/blockchain.o $(OUTPUTDIR)/sha256.o $(OUTPUTDIR)/transaction.o -o $(OUTPUTDIR)/$(EXEC) 
+#Dépendances spécifiques
+$(OUTPUTDIR)/sha256.o: sha256/sha256.h
+
+$(OUTPUTDIR)/blockchain.o: blockchain.h sha256/sha256.h transaction.h
+
+$(OUTPUTDIR)/transaction.o: transaction.h sha256/sha256.h
+
+$(OUTPUTDIR)/main.o: blockchain.h sha256/sha256.h transaction.h
