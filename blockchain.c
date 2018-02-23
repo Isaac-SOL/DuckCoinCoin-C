@@ -1,7 +1,7 @@
 /*
  * blockchain.c
  *
- *  Created on: 2 fÃ©vr. 2018
+ *  Created on: 2 févr. 2018
  *      Author: Pierre
  */
 
@@ -15,7 +15,7 @@
 #include "transaction.h"
 
 /**
- * Structure de donnÃ©es reprÃ©sentant un bloc
+ * Structure de données représentant un bloc
  */
 struct s_block {
 	int index;
@@ -27,8 +27,8 @@ struct s_block {
 };
 
 /**
- * Structures de donnÃ©es rajoutant des informations Ã  un block
- * Ã€ utiliser dans la Blockchain
+ * Structures de données rajoutant des informations à un block
+ * À utiliser dans la Blockchain
  */
 typedef struct s_chainElem {
 	Block *block;
@@ -37,7 +37,7 @@ typedef struct s_chainElem {
 } ChainElement;
 
 /**
- * Structure de donnÃ©es reprÃ©sentant la Blockchain
+ * Structure de données représentant la Blockchain
  */
 struct s_blockchain {
 	int difficulty;
@@ -47,7 +47,7 @@ struct s_blockchain {
 
 /**
  * Initialisation d'une Blockchain.
- * @param bc Pointeur vers la blockchain Ã  initialiser
+ * @param bc Pointeur vers la blockchain à initialiser
  */
 void blockchain(Blockchain *bc) {
 	bc->blockCount = 0;
@@ -56,7 +56,7 @@ void blockchain(Blockchain *bc) {
 
 /**
  * Initialisation d'un block.
- * @param b Pointeur vers le block Ã  initialiser
+ * @param b Pointeur vers le block à initialiser
  */
 void block(Block *b) {
 	setTimeStamp(b);
@@ -65,16 +65,18 @@ void block(Block *b) {
 }
 
 /**
- * Return date a l appel de la fonction.
+ * Renvoie la date à l'appel de la fonction.
+ * @return date actuelle dans une chaîne de caractères
  */
-char * getTimeStamp() {
+char *getTimeStamp() {
 	time_t ltime;
 	time(&ltime);
 	return ctime(&ltime);
 }
 
 /**
- * Initialise le timestamp au block b.
+ * Initialise le timestamp d'un Block.
+ * @param b Block duquel il faut initialiser le timestamp
  */
 void setTimeStamp(Block *b) {
     char *ch;
@@ -84,27 +86,27 @@ void setTimeStamp(Block *b) {
 }
 
 /**
- * DÃ©finir la difficultÃ© d'une Blockchain.
- * @param bc Pointeur vers la blockchain Ã  modifier
- * @param diff Nouvelle difficultÃ©
+ * Définir la difficulté d'une Blockchain.
+ * @param bc Pointeur vers la blockchain à modifier
+ * @param diff Nouvelle difficulté
  */
 void difficulty(Blockchain *bc, int diff) {
 	bc->difficulty = diff;
 }
 
 /**
- * Ajoute une transaction Ã  la liste de transactions d'un block.
- * @param b Pointeur vers le block Ã  modifier
- * @param transaction Transaction Ã  ajouter
+ * Ajoute une transaction à la liste de transactions d'un block.
+ * @param b Pointeur vers le block à modifier
+ * @param transaction Transaction à ajouter
  */
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
 	addTransaction(&(b->transactions), transaction);
 }
 
 /**
- * Renvoie le hash du block donnÃ© sur 32 octets.
- * @param b Pointeur vers le block Ã  lire
- * @param hash ReÃ§oit le hash du bloc en sortie
+ * Renvoie le hash du block donné sur 32 octets.
+ * @param b Pointeur vers le block à lire
+ * @param hash Reçoit le hash du bloc en sortie
  */
 void getBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
 	SHA256_CTX ctx;
@@ -114,10 +116,10 @@ void getBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
 }
 
 /**
- * VÃ©rifie que le hash reÃ§u corresponde bien Ã  la difficultÃ©.
- * @param hash Hash Ã  vÃ©rifier
- * @param difficulty DifficultÃ© Ã  satisfaire
- * @return BoolÃ©en, renvoie true si le hash correspond, false sinon.
+ * Vérifie que le hash reçu corresponde bien à la difficulté.
+ * @param hash Hash à vérifier
+ * @param difficulty Difficulté à satisfaire
+ * @return Booléen, renvoie true si le hash correspond, false sinon.
  */
 int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
 	for (int i = 0; i < difficulty; i++)
@@ -127,10 +129,10 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
 }
 
 /**
- * IncrÃ©mente la nonce d'un block jusqu'Ã  ce que son hash corresponde Ã  la difficultÃ©.
- * @param b Pointeur vers le block Ã  modifier
- * @param hash Renvoie le hash du bloc une fois la nonce trouvÃ©e
- * @param difficulty DifficultÃ© de la blockchain
+ * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficultÃ©.
+ * @param b Pointeur vers le block à modifier
+ * @param hash Renvoie le hash du bloc une fois la nonce trouvée
+ * @param difficulty Difficulté de la blockchain
  */
 void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
 	getBlockHash(b, hash);
@@ -141,9 +143,9 @@ void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
 }
 
 /**
- * Ajoute un block Ã  une Blockchain.
- * @param bc Pointeur vers la blockchain Ã  modifier
- * @param b Block Ã  ajouter
+ * Ajoute un block à une Blockchain.
+ * @param bc Pointeur vers la blockchain à modifier
+ * @param b Block à ajouter
  */
 void addBlock(Blockchain *bc, Block *b) {
 

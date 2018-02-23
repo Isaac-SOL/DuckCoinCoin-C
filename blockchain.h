@@ -28,13 +28,16 @@ void blockchain(Blockchain *bc);
  */
 void block(Block *b);
 
-/**
- * Return date a l appel de la fonction.
- */
-char * getTimeStamp();
 
 /**
- * Initialise le timestamp au block b.
+ * Renvoie la date à l'appel de la fonction.
+ * @return date actuelle dans une chaîne de caractères
+ */
+char *getTimeStamp();
+
+/**
+ * Initialise le timestamp d'un Block.
+ * @param b Block duquel il faut initialiser le timestamp
  */
 void setTimeStamp(Block *b);
 
