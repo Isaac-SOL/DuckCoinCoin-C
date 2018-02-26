@@ -7,6 +7,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "transaction.h"
 #include "deque.h"
@@ -15,16 +16,17 @@
 
 /**
  * Ajout d'une transaction à un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à modifier
+ * @param tl Pointeur vers le TransactionBlock à modifier
  * @param transaction Transaction à ajouter
  */
 void addTransaction(TransactionList *tl, Transaction transaction) {
+	assert(!isFull(tl));
 	push_front(tl, transaction);
 }
 
 /**
- * Vérifie si le TransactionBlock est plein
- * @param tb Pointeur vers le TransactionBlock à vérifier
+ * Vérifie si le TransactionBlock est plein.
+ * @param tl Pointeur vers le TransactionBlock à vérifier
  * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
  */
 int isFull(const TransactionList *tl) {
@@ -32,8 +34,18 @@ int isFull(const TransactionList *tl) {
 }
 
 /**
+ * Transforme une liste de transactions en chaîne de caractères.
+ * @param tl Liste à transformer
+ * @return La liste transformée
+ */
+char *ttoa(const TransactionList *tl) {
+	//TODO à créer
+	return "TODO";
+}
+
+/**
  * Calcul de la merkle root d'un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à lire
+ * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
 void merkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE]) { //TODO il faut tout changer, cet algorithme n'est plus du tout valide

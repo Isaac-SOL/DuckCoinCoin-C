@@ -19,49 +19,30 @@
  */
 struct s_block {
 	int index;
-	char timestamp[TIMESTAMP_LEN];
-	char previousHash[SHA256_BLOCK_SIZE];
+	char *timestamp;
+	char *previousHash;
+	char *currentHash;
 	TransactionList *transactions;
-	char merkleRoot[SHA256_BLOCK_SIZE];
+	char *merkleRoot;
 	int nonce;
 };
-
-/**
- * Structures de données rajoutant des informations à un block
- * À utiliser dans la Blockchain
- */
-typedef struct s_chainElem {
-	Block *block;
-	char blockHash[SHA256_BLOCK_SIZE];
-	struct s_chainElem *prev;
-} ChainElement;
 
 /**
  * Structure de données représentant la Blockchain
  */
 struct s_blockchain {
 	int difficulty;
-	int blockCount;
-	ChainElement *last;
+	Deque *blocks;
 };
 
 /**
  * Initialisation d'une Blockchain.
  * @param bc Pointeur vers la blockchain à initialiser
+ * @param difficulty difficulté de la blockchain
  */
-void blockchain(Blockchain *bc) {
-	bc->blockCount = 0;
-	bc->last = NULL;
-}
-
-/**
- * Initialisation d'un block.
- * @param b Pointeur vers le block à initialiser
- */
-void block(Block *b) {
-	setTimeStamp(b);
-	b->nonce = 0;
-
+void blockchain(Blockchain *bc, int difficulty) {
+	bc->difficulty = difficulty;
+	bc->blocks = deque();
 }
 
 /**
@@ -75,23 +56,38 @@ char *getTimeStamp() {
 }
 
 /**
- * Initialise le timestamp d'un Block.
- * @param b Block duquel il faut initialiser le timestamp
+ * Initialisation d'un block.
+ * @param b Pointeur vers le block à initialiser
+ * @param index Index du block dans la blockchain
+ * @param previousHash hash du block précédent dans la blockchain. NULL si ce block est le génésis.
  */
-void setTimeStamp(Block *b) {
-    char *ch;
-    ch = getTimeStamp();
-    strcpy(b->timestamp, ch);
-    free(ch);
+void block(Block *b, int index, char *previousHash) {
+
+	if (previousHash == NULL) {
+		for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
+			b->previousHash[i] = '\0';
+	} else {
+		b->previousHash = previousHash;
+	}
+	b->index = index;
+	b->currentHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	if (b->currentHash == NULL) {
+		printf("Erreur d'allocation mémoire pour block.\n");
+		exit(1);
+	}
+	b->merkleRoot = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	if (b->merkleRoot == NULL) {
+		printf("Erreur d'allocation mémoire pour block.\n");
+		exit(1);
+	}
+	b->transactions = deque();
+	b->timestamp = getTimeStamp();
+	b->nonce = 0;
+
 }
 
-/**
- * Définir la difficulté d'une Blockchain.
- * @param bc Pointeur vers la blockchain à modifier
- * @param diff Nouvelle difficulté
- */
-void difficulty(Blockchain *bc, int diff) {
-	bc->difficulty = diff;
+char *getBlockHash(Block *b) {
+	return b->currentHash;
 }
 
 /**
@@ -104,11 +100,21 @@ void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
 }
 
 /**
+ * Transforme un block en chaîne de caractères.
+ * @param b Block à transformer
+ * @return Block transformé
+ */
+char *btoa(Block *b) {
+	//TODO à créer
+	return "TODO";
+}
+
+/**
  * Renvoie le hash du block donné sur 32 octets.
  * @param b Pointeur vers le block à lire
  * @param hash Reçoit le hash du bloc en sortie
  */
-void getBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
 	SHA256_CTX ctx;
 	sha256_init(&ctx);
 	sha256_update(&ctx, (BYTE *) b, sizeof(Block));
@@ -134,11 +140,11 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
-	getBlockHash(b, hash);
+void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) { //TOSDO adapter
+	calcBlockHash(b, hash);
 	while (!verifyHash(hash, difficulty)) {
 		(b->nonce)++;
-		getBlockHash(b, hash);
+		calcBlockHash(b, hash);
 	}
 }
 
@@ -147,30 +153,18 @@ void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * @param bc Pointeur vers la blockchain à modifier
  * @param b Block à ajouter
  */
-void addBlock(Blockchain * bc, Block * b) {
+void addBlock(Blockchain *bc) {
 
-	ChainElement *ce = malloc(sizeof(ChainElement));
-	ce->block = b;
+	Block *b = malloc(sizeof(Block));
+	block(b, dequeSize(bc->blocks), dequeEmpty(bc->blocks) ? NULL : getBlockHash(front(bc->blocks)));
 
-	//Finalisation des informations du bloc
-	if (bc->last == NULL) {
-		//Nettoyage du hash car il n'y a pas de bloc précédent
-		for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
-			b->previousHash[i] = '\0';
-	} else {
-		//Informations pour les blocs suivants
-		memcpy(b->previousHash, bc->last->blockHash, SHA256_BLOCK_SIZE);
-	}
-	b->index = bc->blockCount;
-	//b->timestamp = ??? (TODO)
+	b->index = dequeSize(bc->blocks);
 
 	//Calcul du hash
-	updateNonce(b, ce->blockHash, bc->difficulty);
+	//updateNonce(b, ce->blockHash, bc->difficulty); TODO adapter
 
 	//Ajout du bloc à la blockchain
-	ce->prev = bc->last;
-	bc->last = ce;
-	(bc->blockCount)++;
+	push_front(bc->blocks, b);
 
 }
 

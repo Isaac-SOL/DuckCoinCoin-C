@@ -19,21 +19,28 @@ typedef char * Transaction;
 
 /**
  * Ajout d'une transaction à un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à modifier
+ * @param tl Pointeur vers le TransactionBlock à modifier
  * @param transaction Transaction à ajouter
  */
 void addTransaction(TransactionList *tl, Transaction transaction);
 
 /**
  * Vérifie si le TransactionBlock est plein
- * @param tb Pointeur vers le TransactionBlock à vérifier
+ * @param tl Pointeur vers le TransactionBlock à vérifier
  * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
  */
 int isFull(const TransactionList *tl);
 
 /**
+ * Transforme une liste de transactions en chaîne de caractères.
+ * @param tl Liste à transformer
+ * @return La liste transformée
+ */
+char *ttoa(const TransactionList *tl);
+
+/**
  * Calcul de la merkle root d'un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à lire
+ * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
 void merkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
@@ -41,7 +48,7 @@ void merkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
 
 /**
  * creation transaction block random
- * @return tb un bloc de transaction random
+ * @return tl un bloc de transaction random
  */
 TransactionList *random_tb();
 
