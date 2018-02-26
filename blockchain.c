@@ -21,7 +21,7 @@ struct s_block {
 	int index;
 	char timestamp[TIMESTAMP_LEN];
 	char previousHash[SHA256_BLOCK_SIZE];
-	TransactionBlock transactions;
+	TransactionList transactions;
 	char merkleRoot[SHA256_BLOCK_SIZE];
 	int nonce;
 };
