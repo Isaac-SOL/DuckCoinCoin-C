@@ -147,7 +147,7 @@ void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * @param bc Pointeur vers la blockchain à modifier
  * @param b Block à ajouter
  */
-void addBlock(Blockchain *bc, Block *b) {
+void addBlock(Blockchain * bc, Block * b) {
 
 	ChainElement *ce = malloc(sizeof(ChainElement));
 	ce->block = b;
@@ -172,4 +172,39 @@ void addBlock(Blockchain *bc, Block *b) {
 	bc->last = ce;
 	(bc->blockCount)++;
 
+}
+
+/**
+ * @author Chasse (Nicolas) generation random de blocs [wip]
+ */
+
+/**
+ * generation random(aleat) de blocks
+ * @return un bloc genere aleatoirement
+ */
+Block *random_block(){
+	srand(time(NULL));
+	char *root;
+	Block *b= malloc(sizeof(Block));
+	block(b);
+	b->index = rand();
+	b->transactions = random_tb();
+	b->merkleRoot = merkleRoot(b->transactions,root);
+
+	return b;
+} // pas du tout sur de l'utilisation de la merkle root et
+
+/**
+ * add: verifier qu'un bloc n'est pas identique a un autre ?
+ * @return bc une block chain aleatoire de taille aleatoire(a modif)
+ */
+Blockchain random_bc(){
+	srand(time(NULL));
+	int r = (rand()%(500-1))+1; //define une taille p-e ?
+	Blockchain *bc = malloc(sizeof(Blockchain));
+	for (int i = 0; i<r; i++){
+		Block *b = random_block();
+		addBlock(bc, b);
+	}
+	return *bc;
 }

@@ -5,6 +5,9 @@
  *      Author: Pierre
  */
 
+#include <time.h>
+#include <stdlib.h>
+
 #include "transaction.h"
 #include "string.h"
 #include "sha256/sha256.h"
@@ -92,3 +95,34 @@ void merkleRoot(const TransactionBlock *tb, char root[SHA256_BLOCK_SIZE]) {
 
 	memcpy(root, merkleTree[0], SHA256_BLOCK_SIZE);
 }	//TODO tout ceci m'a l'air bien dégueulasse
+
+
+// Chasse (Nicolas) Generation transactions random
+//fonction recuperee sur les forums stackexchange pour avoir un random string
+char *rand_string(char *str, int size)
+{
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    if (size) {
+        --size;
+        for (size_t n = 0; n < size; n++) {
+            int key = rand() % (int) (sizeof charset - 1);
+            str[n] = charset[key];
+        }
+        str[size] = '\0';
+    }
+    return str;
+}
+
+
+TransactionBlock random_tb(){
+	int size;
+	char *str;
+	for (int i=0; i<MAX_TRANSACTIONS; i++){
+			srand(time(NULL));
+			size = (rand()%(MAX_TRANSACTIONS-1))+1;;
+			TransactionBlock *tb = malloc(sizeof(TransactionBlock));
+			transactionBlock(*tb);
+			addTransaction(*tb, rand_string(*str, size));
+			free(tb);  //besoin du free ?
+	}
+} //A modifier [wip]

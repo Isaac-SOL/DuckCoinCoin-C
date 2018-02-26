@@ -60,4 +60,11 @@ const char *getTransactionAt(const TransactionBlock *tb, int i);
  */
 void merkleRoot(const TransactionBlock *tb, char hash[SHA256_BLOCK_SIZE]);
 
+
+/**
+ * creation transaction block random
+ * @return tb un bloc de transaction random
+ */
+TransactionBlock random_tb();
+
 #endif /* TRANSACTION_H_ */
