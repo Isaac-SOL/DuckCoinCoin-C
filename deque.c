@@ -125,7 +125,7 @@ Deque *push_front(Deque *d, void *elem) {
  * @return Liste modifiée
  */
 Deque *pop_front(Deque *d) {
-	assert(!dequeEmpty(d), "Erreur: pop sur une liste vide\n");
+	assert(!dequeEmpty(d));
 	DequeNode *dn = d->sent->next;
 
 	d->sent->next = dn->next;
@@ -142,7 +142,7 @@ Deque *pop_front(Deque *d) {
  * @return Liste modifiée
  */
 Deque *pop_back(Deque *d) {
-	assert(!dequeEmpty(d), "Erreur: pop sur une liste vide\n");
+	assert(!dequeEmpty(d));
 	DequeNode *dn = d->sent->prev;
 
 	d->sent->prev = dn->prev;
@@ -161,7 +161,7 @@ Deque *pop_back(Deque *d) {
  * @return Liste modifiée
  */
 Deque *insert_at(Deque *d, void *elem, int pos) {
-	assert(pos >= 0 && pos <= d->size, "Erreur: insertion à une position interdite\n");
+	assert(pos >= 0 && pos <= d->size);
 	DequeNode *dn = malloc(sizeof(DequeNode));
 	DequeNode *t = d->sent->next;
 
@@ -184,7 +184,7 @@ Deque *insert_at(Deque *d, void *elem, int pos) {
  * @return Liste modifiée
  */
 Deque *remove_at(Deque *d, int pos) {
-	assert(pos >= 0 && pos < d->size, "Erreur: suppression à une position interdite (ou liste vide)\n");
+	assert(pos >= 0 && pos < d->size);
 	DequeNode *t = d->sent->next;
 
 	while (pos--) t = t->next; //TODO à vérifier
@@ -203,7 +203,7 @@ Deque *remove_at(Deque *d, int pos) {
  * @return Premier élément
  */
 void *front(const Deque *d) {
-	assert(!dequeEmpty(d), "Erreur: Lecture d'une liste vide\n");
+	assert(!dequeEmpty(d));
 	return d->sent->next->data;
 }
 
@@ -213,7 +213,7 @@ void *front(const Deque *d) {
  * @return Dernier élément
  */
 void *back(const Deque *d) {
-	assert(!dequeEmpty(d), "Erreur: Lecture d'une liste vide\n");
+	assert(!dequeEmpty(d));
 	return d->sent->prev->data;
 }
 
@@ -224,7 +224,7 @@ void *back(const Deque *d) {
  * @return Élément à la position donnée
  */
 void *ith(const Deque *d, int pos) {
-	assert(pos >= 0 && pos < d->size, "Erreur: Lecture à une position interdite (ou liste vide)\n");
+	assert(pos >= 0 && pos < d->size);
 	DequeNode *t = d->sent->next;
 
 	while (pos--) t = t->next;

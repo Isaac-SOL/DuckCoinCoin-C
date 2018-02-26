@@ -21,7 +21,7 @@ struct s_block {
 	int index;
 	char timestamp[TIMESTAMP_LEN];
 	char previousHash[SHA256_BLOCK_SIZE];
-	TransactionList transactions;
+	TransactionList *transactions;
 	char merkleRoot[SHA256_BLOCK_SIZE];
 	int nonce;
 };
@@ -100,7 +100,7 @@ void difficulty(Blockchain *bc, int diff) {
  * @param transaction Transaction à ajouter
  */
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
-	addTransaction(&(b->transactions), transaction);
+	addTransaction(b->transactions, transaction);
 }
 
 /**
@@ -184,12 +184,11 @@ void addBlock(Blockchain * bc, Block * b) {
  */
 Block *random_block(){
 	srand(time(NULL));
-	char *root;
 	Block *b= malloc(sizeof(Block));
 	block(b);
 	b->index = rand();
 	b->transactions = random_tb();
-	b->merkleRoot = merkleRoot(b->transactions,root);
+	merkleRoot(b->transactions, b->merkleRoot);
 
 	return b;
 } // pas du tout sur de l'utilisation de la merkle root et
