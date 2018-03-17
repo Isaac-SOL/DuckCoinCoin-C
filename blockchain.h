@@ -12,41 +12,29 @@
 #include "transaction.h"
 
 #define TIMESTAMP_LEN 30
+#define STR_BLOCK_LEN 420
 
 typedef struct s_blockchain Blockchain;
 typedef struct s_block Block;
 
 /**
  * Initialisation d'une Blockchain.
- * @param bc Pointeur vers la blockchain à initialiser
+ * @param difficulty difficulté de la blockchain
  */
-void blockchain(Blockchain *bc);
+Blockchain *blockchain(int difficulty);
 
 /**
  * Initialisation d'un block.
- * @param b Pointeur vers le block à initialiser
+ * @param index Index du block dans la blockchain
+ * @param previousHash hash du block précédent dans la blockchain. NULL si ce block est le génésis.
  */
-void block(Block *b);
-
-
-/**
- * Renvoie la date à l'appel de la fonction.
- * @return date actuelle dans une chaîne de caractères
- */
-char *getTimeStamp();
+Block *block();
 
 /**
- * Initialise le timestamp d'un Block.
- * @param b Block duquel il faut initialiser le timestamp
+ * Revoie le hash du block.
+ * @return Hash du block
  */
-void setTimeStamp(Block *b);
-
-/**
- * Définir la difficulté d'une Blockchain.
- * @param bc Pointeur vers la blockchain à modifier
- * @param diff Nouvelle difficulté
- */
-void difficulty(Blockchain *bc, int diff);
+char *getBlockHash(Block *b);	//TODO je crois que ça sert à rien
 
 /**
  * Ajoute une transaction à la liste de transactions d'un block.
@@ -56,11 +44,18 @@ void difficulty(Blockchain *bc, int diff);
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]);
 
 /**
+ * Transforme un block en chaîne de caractères.
+ * @param b Block à transformer
+ * @return Block transformé
+ */
+char *blockToString(const Block *b);
+
+/**
  * Renvoie le hash du block donné sur 32 octets.
  * @param b Pointeur vers le block à modifier
  * @param hash Reçoit le hash du bloc en sortie
  */
-void getBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]);
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]);
 
 /**
  * Vérifie que le hash reçu corresponde bien à la difficulté.
@@ -76,7 +71,12 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty);
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+
+/**
+ * Calcule la Merkle Root des transactions du block et la range dans la variable à cet effet
+ */
+void calcBlockMerkleRoot(Block *b);
 
 /**
  * Ajoute un block à une Blockchain.

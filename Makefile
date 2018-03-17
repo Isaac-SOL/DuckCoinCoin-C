@@ -14,14 +14,25 @@ SHAOBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(SHASRC))
 #Options conditionnelles pour le débug
 ifeq ($(DEBUG),yes)
 	OPT += -g
+start: startDebug
 else
 	OPT += -O3 -DNDEBUG
+start: startRelease
 endif
 
-.PHONY: clean mrproper doc
+.PHONY: clean mrproper doc start
+
+#informations de lancement
+startDebug:
+	@echo Makefile DuckCoinCoin, par Pierre Cuquel
+	@echo Compilation en mode Debug
+
+startRelease:
+	@echo Makefile DuckCoinCoin, par Pierre Cuquel
+	@echo Compilation en mode Release
 
 #Création de l'exécutable
-all: $(OUTPUTDIR)/$(EXEC)
+all: start $(OUTPUTDIR)/$(EXEC)
 
 #Création de la documentation
 doc:
@@ -43,10 +54,10 @@ mrproper: clean
 	rm -rf $(OUTPUTDIR)/$(EXEC)
 
 #Dépendances spécifiques
-$(OUTPUTDIR)/sha256.o: sha256/sha256.h
+$(COMPILDIR)/sha256.o: sha256/sha256.h
 
-$(OUTPUTDIR)/blockchain.o: blockchain.h sha256/sha256.h transaction.h
+$(COMPILDIR)/blockchain.o: util.h blockchain.h sha256/sha256.h transaction.h
 
-$(OUTPUTDIR)/transaction.o: transaction.h sha256/sha256.h
+$(COMPILDIR)/transaction.o: util.h transaction.h sha256/sha256.h
 
-$(OUTPUTDIR)/main.o: blockchain.h sha256/sha256.h transaction.h
+$(COMPILDIR)/main.o: util.h blockchain.h sha256/sha256.h transaction.h
