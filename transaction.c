@@ -5,14 +5,15 @@
  *      Author: Pierre
  */
 
-#include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "transaction.h"
 #include "deque.h"
-#include "string.h"
-#include "sha256/sha256.h"
+#include "sha256/sha256_utils.h"
+#include "util.h"
 
 /**
  * Ajout d'une transaction à un TransactionBlock.
@@ -20,7 +21,7 @@
  * @param transaction Transaction à ajouter
  */
 void addTransaction(TransactionList *tl, Transaction transaction) {
-	assert(!isFull(tl));
+	assert(!transactionListIsFull(tl));
 	push_front(tl, transaction);
 }
 
@@ -29,7 +30,7 @@ void addTransaction(TransactionList *tl, Transaction transaction) {
  * @param tl Pointeur vers le TransactionBlock à vérifier
  * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
  */
-int isFull(const TransactionList *tl) {
+int transactionListIsFull(const TransactionList *tl) {
 	return dequeSize(tl) == MAX_TRANSACTIONS;
 }
 
@@ -38,9 +39,19 @@ int isFull(const TransactionList *tl) {
  * @param tl Liste à transformer
  * @return La liste transformée
  */
-char *ttoa(const TransactionList *tl) {
-	//TODO à créer
-	return "TODO";
+char *transactionsToString(const TransactionList *tl) {
+	char *result = malloc(STR_TRANSACTIONLIST_LEN * sizeof(char));	//Fait dynamiquement pour garder le contenu à la sortie de la foncion
+	if (result == NULL) {
+		printf("Erreur d'allocation mémoire pour transactionsToString.\n");
+		exit(1);
+	}
+
+	result[0] = '\0';
+	for (int i = 0; i < dequeSize(tl); i++) {
+		strcat(result, ith(tl, i));	//TODO à transformer avec une fontion map() comme vu en SDD?
+	}
+
+	return result;
 }
 
 /**
@@ -48,7 +59,7 @@ char *ttoa(const TransactionList *tl) {
  * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void merkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE]) { //TODO il faut tout changer, cet algorithme n'est plus du tout valide
+void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE]) { //TODO il faut tout changer, cet algorithme n'est plus du tout valide
 
 	char merkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
 	char nextMerkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
@@ -82,32 +93,36 @@ void merkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE]) { //TOD
 	memcpy(root, merkleTree[0], SHA256_BLOCK_SIZE);
 }	//TODO tout ceci m'a l'air bien dégueulasse
 
+///TODO Mettra ça dans un fichier à part, genre randomGeneration.c
 
-// Chasse (Nicolas) Generation transactions random
-//fonction recuperee sur les forums stackexchange pour avoir un random string
-char *rand_string(char *str, int size)
-{
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    if (size) {
-        --size;
-        for (size_t n = 0; n < size; n++) {
-            int key = rand() % (int) (sizeof charset - 1);
-            str[n] = charset[key];
-        }
-        str[size] = '\0';
-    }
-    return str;
+/**
+ * Génère une transaction aléatoire
+ * @return Pointeur vers la transaction aléatoire
+ */
+/*char *randomTransaction() {
+	char *result = malloc(TRANSACTION_LEN * sizeof(char));
+
+	srand(time(NULL));
+	sprintf(result, "%s -> %s: %d DCC.", randomElement(MEMBERS, 15*sizeof(char), 5),
+										 randomElement(MEMBERS, 15*sizeof(char), 5),
+										 rand()%100);
+
+	return result;
 }
+*/
+// Chasse (Nicolas) Generation transactions random
+/**
+ * Génère une liste de transactions aléatoires.
+ * @return Une liste de transactions aléatoires.
+ */
+/*TransactionList *randomTransactionList() {
+	TransactionList *tl = deque();
+	srand(time(NULL));
+	int max = rand() % (MAX_TRANSACTIONS+1);
 
+	for (int i = 0; i < max; i++)
+			addTransaction(tl, randomTransaction());
 
-TransactionList *random_tb(){
-	char *str = malloc(TRANSACTION_LEN * sizeof(char));
-	TransactionList *tb = deque();
-
-	for (int i=0; i<MAX_TRANSACTIONS; i++){
-			srand(time(NULL));
-			addTransaction(tb, rand_string(str, TRANSACTION_LEN));
-			free(tb);  //besoin du free ?
-	}
-	return tb;
+	return tl;
 } //TODO A modifier pour faire des vraies transactions aléatoires
+*/

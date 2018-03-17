@@ -12,7 +12,8 @@
 #include "deque.h"
 
 #define MAX_TRANSACTIONS 10
-#define TRANSACTION_LEN 30
+#define TRANSACTION_LEN 40
+#define STR_TRANSACTIONLIST_LEN 330
 
 typedef Deque TransactionList;
 typedef char * Transaction;
@@ -29,27 +30,20 @@ void addTransaction(TransactionList *tl, Transaction transaction);
  * @param tl Pointeur vers le TransactionBlock à vérifier
  * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
  */
-int isFull(const TransactionList *tl);
+int transactionListIsFull(const TransactionList *tl);
 
 /**
  * Transforme une liste de transactions en chaîne de caractères.
  * @param tl Liste à transformer
  * @return La liste transformée
  */
-char *ttoa(const TransactionList *tl);
+char *transactionsToString(const TransactionList *tl);
 
 /**
  * Calcul de la merkle root d'un TransactionBlock.
  * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void merkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
-
-
-/**
- * creation transaction block random
- * @return tl un bloc de transaction random
- */
-TransactionList *random_tb();
+void calcMerkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
 
 #endif /* TRANSACTION_H_ */

@@ -12,31 +12,29 @@
 #include "transaction.h"
 
 #define TIMESTAMP_LEN 30
+#define STR_BLOCK_LEN 420
 
 typedef struct s_blockchain Blockchain;
 typedef struct s_block Block;
 
 /**
  * Initialisation d'une Blockchain.
- * @param bc Pointeur vers la blockchain à initialiser
  * @param difficulty difficulté de la blockchain
  */
-void blockchain(Blockchain *bc, int difficulty);
+Blockchain *blockchain(int difficulty);
 
 /**
  * Initialisation d'un block.
- * @param b Pointeur vers le block à initialiser
  * @param index Index du block dans la blockchain
  * @param previousHash hash du block précédent dans la blockchain. NULL si ce block est le génésis.
  */
-void block(Block *b, int index, char *previousHash);
-
+Block *block();
 
 /**
- * Renvoie la date à l'appel de la fonction.
- * @return date actuelle dans une chaîne de caractères
+ * Revoie le hash du block.
+ * @return Hash du block
  */
-char *getTimeStamp(); //TODO juger de l'utilité de rendre cette fonction publique
+char *getBlockHash(Block *b);	//TODO je crois que ça sert à rien
 
 /**
  * Ajoute une transaction à la liste de transactions d'un block.
@@ -44,6 +42,13 @@ char *getTimeStamp(); //TODO juger de l'utilité de rendre cette fonction publiq
  * @param transaction Transaction à ajouter
  */
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]);
+
+/**
+ * Transforme un block en chaîne de caractères.
+ * @param b Block à transformer
+ * @return Block transformé
+ */
+char *blockToString(const Block *b);
 
 /**
  * Renvoie le hash du block donné sur 32 octets.
@@ -66,13 +71,18 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty);
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+
+/**
+ * Calcule la Merkle Root des transactions du block et la range dans la variable à cet effet
+ */
+void calcBlockMerkleRoot(Block *b);
 
 /**
  * Ajoute un block à une Blockchain.
  * @param bc Pointeur vers la blockchain à modifier
  * @param b Block à ajouter
  */
-void addBlock(Blockchain *bc);
+void addBlock(Blockchain *bc, Block *b);
 
 #endif /* BLOCKCHAIN_H_ */
