@@ -5,75 +5,72 @@
  *      Author: Pierre
  */
 
-#include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
 #include "transaction.h"
-#include "string.h"
-#include "sha256/sha256.h"
-
-/**
- * Initialisation d'un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à initialiser
- */
-void transactionBlock(TransactionBlock *tb) {
-	tb->count = 0;
-}
+#include "deque.h"
+#include "sha256/sha256_utils.h"
+#include "util.h"
 
 /**
  * Ajout d'une transaction à un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à modifier
+ * @param tl Pointeur vers le TransactionBlock à modifier
  * @param transaction Transaction à ajouter
  */
-void addTransaction(TransactionBlock *tb, const char transaction[TRANSACTION_LEN]) {
-	memcpy(tb->data + tb->count, transaction, TRANSACTION_LEN);
+void addTransaction(TransactionList *tl, Transaction transaction) {
+	assert(!transactionListIsFull(tl));
+	push_front(tl, transaction);
 }
 
 /**
- * Vérifie si le TransactionBlock est plein
- * @param tb Pointeur vers le TransactionBlock à vérifier
+ * Vérifie si le TransactionBlock est plein.
+ * @param tl Pointeur vers le TransactionBlock à vérifier
  * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
  */
-int isFull(const TransactionBlock *tb) {
-	return tb->count == MAX_TRANSACTIONS;
+int transactionListIsFull(const TransactionList *tl) {
+	return dequeSize(tl) == MAX_TRANSACTIONS;
 }
 
 /**
- * Renvoie le nombre de transactions dans un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à lire
- * @return Nombre de transactions
+ * Transforme une liste de transactions en chaîne de caractères.
+ * @param tl Liste à transformer
+ * @return La liste transformée
  */
-int getTransactionCount(const TransactionBlock *tb) {
-	return tb->count;
-}	//TODO voir si ça sert vraiment à quelque chose
+char *transactionsToString(const TransactionList *tl) {
+	char *result = malloc(STR_TRANSACTIONLIST_LEN * sizeof(char));	//Fait dynamiquement pour garder le contenu à la sortie de la foncion
+	if (result == NULL) {
+		printf("Erreur d'allocation mémoire pour transactionsToString.\n");
+		exit(1);
+	}
 
-/**
- * Renvoie la transaction présente à l'index donné.
- * @param tb Pointeur vers le TransactionBlock à lire
- * @param i Index de la transaction
- * @return Transaction à l'index i
- */
-const char *getTransactionAt(const TransactionBlock *tb, int i) {
-	return tb->data[i];
-}	//TODO voir si ça sert vraiment à quelque chose
+	result[0] = '\0';
+	for (int i = 0; i < dequeSize(tl); i++) {
+		strcat(result, ith(tl, i));	//TODO à transformer avec une fontion map() comme vu en SDD?
+	}
+
+	return result;
+}
 
 /**
  * Calcul de la merkle root d'un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à lire
+ * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void merkleRoot(const TransactionBlock *tb, char root[SHA256_BLOCK_SIZE]) {
+void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE]) { //TODO il faut tout changer, cet algorithme n'est plus du tout valide
 
 	char merkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
 	char nextMerkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
-	for (int i = 0; i < tb->count; i++) {
+	for (int i = 0; i < dequeSize(tl); i++) {
 		SHA256_CTX ctx;
 		sha256_init(&ctx);
-		sha256_update(&ctx, (BYTE *) tb->data[i], TRANSACTION_LEN);
+		sha256_update(&ctx, (BYTE *) ith(tl, i), TRANSACTION_LEN);
 		sha256_final(&ctx, (BYTE *) merkleTree[i]);
 	}
 
-	int len = tb->count;
+	int len = dequeSize(tl);
 	while (len > 1) {	//TODO optimiser cette partie (pas de memcpy nécessaire dans tous les cas)
 		for (int i = 0; i < len; i += 2) {
 			char concat[SHA256_BLOCK_SIZE * 2];
@@ -96,33 +93,36 @@ void merkleRoot(const TransactionBlock *tb, char root[SHA256_BLOCK_SIZE]) {
 	memcpy(root, merkleTree[0], SHA256_BLOCK_SIZE);
 }	//TODO tout ceci m'a l'air bien dégueulasse
 
+///TODO Mettra ça dans un fichier à part, genre randomGeneration.c
 
-// Chasse (Nicolas) Generation transactions random
-//fonction recuperee sur les forums stackexchange pour avoir un random string
-char *rand_string(char *str, int size)
-{
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    if (size) {
-        --size;
-        for (size_t n = 0; n < size; n++) {
-            int key = rand() % (int) (sizeof charset - 1);
-            str[n] = charset[key];
-        }
-        str[size] = '\0';
-    }
-    return str;
+/**
+ * Génère une transaction aléatoire
+ * @return Pointeur vers la transaction aléatoire
+ */
+/*char *randomTransaction() {
+	char *result = malloc(TRANSACTION_LEN * sizeof(char));
+
+	srand(time(NULL));
+	sprintf(result, "%s -> %s: %d DCC.", randomElement(MEMBERS, 15*sizeof(char), 5),
+										 randomElement(MEMBERS, 15*sizeof(char), 5),
+										 rand()%100);
+
+	return result;
 }
+*/
+// Chasse (Nicolas) Generation transactions random
+/**
+ * Génère une liste de transactions aléatoires.
+ * @return Une liste de transactions aléatoires.
+ */
+/*TransactionList *randomTransactionList() {
+	TransactionList *tl = deque();
+	srand(time(NULL));
+	int max = rand() % (MAX_TRANSACTIONS+1);
 
+	for (int i = 0; i < max; i++)
+			addTransaction(tl, randomTransaction());
 
-TransactionBlock random_tb(){
-	int size;
-	char *str;
-	for (int i=0; i<MAX_TRANSACTIONS; i++){
-			srand(time(NULL));
-			size = (rand()%(MAX_TRANSACTIONS-1))+1;;
-			TransactionBlock *tb = malloc(sizeof(TransactionBlock));
-			transactionBlock(*tb);
-			addTransaction(*tb, rand_string(*str, size));
-			free(tb);  //besoin du free ?
-	}
-} //A modifier [wip]
+	return tl;
+} //TODO A modifier pour faire des vraies transactions aléatoires
+*/

@@ -9,62 +9,41 @@
 #define TRANSACTION_H_
 
 #include "sha256/sha256.h"
+#include "deque.h"
 
-#define MAX_TRANSACTIONS 16	//DOIT être une puissance de 2
-#define TRANSACTION_LEN 30
+#define MAX_TRANSACTIONS 10
+#define TRANSACTION_LEN 40
+#define STR_TRANSACTIONLIST_LEN 330
 
-typedef struct s_transactionBlock {
-	int count;
-	char data[MAX_TRANSACTIONS][TRANSACTION_LEN];
-} TransactionBlock;	//Rendue visible pour pouvoir l'ajouter directement dans un block. TODO Améliorer ça?
-
-/**
- * Initialisation d'un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à initialiser
- */
-void transactionBlock(TransactionBlock *tb);
+typedef Deque TransactionList;
+typedef char * Transaction;
 
 /**
  * Ajout d'une transaction à un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à modifier
+ * @param tl Pointeur vers le TransactionBlock à modifier
  * @param transaction Transaction à ajouter
  */
-void addTransaction(TransactionBlock *tb, const char transaction[TRANSACTION_LEN]);
+void addTransaction(TransactionList *tl, Transaction transaction);
 
 /**
  * Vérifie si le TransactionBlock est plein
- * @param tb Pointeur vers le TransactionBlock à vérifier
+ * @param tl Pointeur vers le TransactionBlock à vérifier
  * @return Booléen, renvoie true si le TransactionBlock est plein, false sinon
  */
-int isFull(const TransactionBlock *tb);
+int transactionListIsFull(const TransactionList *tl);
 
 /**
- * Renvoie le nombre de transactions dans un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à lire
- * @return Nombre de transactions
+ * Transforme une liste de transactions en chaîne de caractères.
+ * @param tl Liste à transformer
+ * @return La liste transformée
  */
-int getTransactionCount(const TransactionBlock *tb);
-
-/**
- * Renvoie la transaction présente à l'index donné.
- * @param tb Pointeur vers le TransactionBlock à lire
- * @param i Index de la transaction
- * @return Transaction à l'index i
- */
-const char *getTransactionAt(const TransactionBlock *tb, int i);
+char *transactionsToString(const TransactionList *tl);
 
 /**
  * Calcul de la merkle root d'un TransactionBlock.
- * @param tb Pointeur vers le TransactionBlock à lire
+ * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void merkleRoot(const TransactionBlock *tb, char hash[SHA256_BLOCK_SIZE]);
-
-
-/**
- * creation transaction block random
- * @return tb un bloc de transaction random
- */
-TransactionBlock random_tb();
+void calcMerkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
 
 #endif /* TRANSACTION_H_ */

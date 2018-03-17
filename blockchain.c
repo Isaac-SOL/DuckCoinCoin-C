@@ -10,88 +10,78 @@
 #include <string.h>
 #include <time.h>
 
-#include "sha256/sha256.h"
+#include "sha256/sha256_utils.h"
 #include "blockchain.h"
 #include "transaction.h"
+#include "util.h"
 
 /**
  * Structure de données représentant un bloc
  */
 struct s_block {
 	int index;
-	char timestamp[TIMESTAMP_LEN];
-	char previousHash[SHA256_BLOCK_SIZE];
-	TransactionBlock transactions;
-	char merkleRoot[SHA256_BLOCK_SIZE];
+	char *timestamp;
+	char *previousHash;
+	char *currentHash;
+	TransactionList *transactions;
+	char *merkleRoot;
 	int nonce;
 };
-
-/**
- * Structures de données rajoutant des informations à un block
- * À utiliser dans la Blockchain
- */
-typedef struct s_chainElem {
-	Block *block;
-	char blockHash[SHA256_BLOCK_SIZE];
-	struct s_chainElem *prev;
-} ChainElement;
 
 /**
  * Structure de données représentant la Blockchain
  */
 struct s_blockchain {
 	int difficulty;
-	int blockCount;
-	ChainElement *last;
+	Deque *blocks;
 };
 
 /**
  * Initialisation d'une Blockchain.
- * @param bc Pointeur vers la blockchain à initialiser
+ * @param difficulty difficulté de la blockchain
  */
-void blockchain(Blockchain *bc) {
-	bc->blockCount = 0;
-	bc->last = NULL;
+Blockchain *blockchain(int difficulty) {
+	Blockchain *bc = malloc(sizeof(Blockchain));
+	bc->difficulty = difficulty;
+	bc->blocks = deque();
+	return bc;
 }
 
 /**
  * Initialisation d'un block.
- * @param b Pointeur vers le block à initialiser
  */
-void block(Block *b) {
-	setTimeStamp(b);
+Block *block() {
+
+	Block *b = malloc(sizeof(Block));
+	
+	b->previousHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+		if (b->previousHash == NULL) {
+			printf("Erreur d'allocation mémoire pour block.\n");
+			exit(1);
+		}
+	b->currentHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	if (b->currentHash == NULL) {
+		printf("Erreur d'allocation mémoire pour block.\n");
+		exit(1);
+	}
+	b->merkleRoot = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	if (b->merkleRoot == NULL) {
+		printf("Erreur d'allocation mémoire pour block.\n");
+		exit(1);
+	}
+	b->transactions = deque();
+	b->timestamp = getTimeStamp();	//TODO est-ce qu'on fait ça ici ou à l'ajout dans la blockchain?
 	b->nonce = 0;
 
+	return b;
 }
 
 /**
- * Renvoie la date à l'appel de la fonction.
- * @return date actuelle dans une chaîne de caractères
+ * Revoie le hash du block.
+ * @return Hash du block
  */
-char *getTimeStamp() {
-	time_t ltime;
-	time(&ltime);
-	return ctime(&ltime);
-}
-
-/**
- * Initialise le timestamp d'un Block.
- * @param b Block duquel il faut initialiser le timestamp
- */
-void setTimeStamp(Block *b) {
-    char *ch;
-    ch = getTimeStamp();
-    strcpy(b->timestamp, ch);
-    free(ch);
-}
-
-/**
- * Définir la difficulté d'une Blockchain.
- * @param bc Pointeur vers la blockchain à modifier
- * @param diff Nouvelle difficulté
- */
-void difficulty(Blockchain *bc, int diff) {
-	bc->difficulty = diff;
+char *getBlockHash(Block *b) {	//TODO je crois que ça sert à rien
+	return b->currentHash;
 }
 
 /**
@@ -100,7 +90,22 @@ void difficulty(Blockchain *bc, int diff) {
  * @param transaction Transaction à ajouter
  */
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
-	addTransaction(&(b->transactions), transaction);
+	addTransaction(b->transactions, transaction);
+}
+
+/**
+ * Transforme un block en chaîne de caractères.
+ * @param b Block à transformer
+ * @return Block transformé
+ */
+char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut travailler avec
+	char *result = malloc(STR_BLOCK_LEN * sizeof(char));
+	if (result == NULL) {
+		printf("Erreur d'allocation mémoire pour blockToString.\n");
+		exit(1);
+	}
+	sprintf(result, "%d,%s,%s,%d,%s", b->index, transactionsToString(b->transactions), b->previousHash, b->nonce, b->merkleRoot);
+	return result;
 }
 
 /**
@@ -108,11 +113,8 @@ void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
  * @param b Pointeur vers le block à lire
  * @param hash Reçoit le hash du bloc en sortie
  */
-void getBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
-	SHA256_CTX ctx;
-	sha256_init(&ctx);
-	sha256_update(&ctx, (BYTE *) b, sizeof(Block));
-	sha256_final(&ctx, (BYTE *) hash);
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
+	sha256ofString((BYTE *) blockToString(b), hash);
 }
 
 /**
@@ -129,17 +131,24 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
 }
 
 /**
- * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficultÃ©.
+ * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficulté.
  * @param b Pointeur vers le block à modifier
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
-	getBlockHash(b, hash);
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
+	calcBlockHash(b, hash);
 	while (!verifyHash(hash, difficulty)) {
 		(b->nonce)++;
-		getBlockHash(b, hash);
+		calcBlockHash(b, hash);
 	}
+}
+
+/**
+ * Calcule la Merkle Root des transactions du block et la range dans la variable à cet effet
+ */
+void calcBlockMerkleRoot(Block *b) {
+	calcMerkleRoot(b->transactions, b->merkleRoot);
 }
 
 /**
@@ -147,32 +156,21 @@ void updateNonce(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * @param bc Pointeur vers la blockchain à modifier
  * @param b Block à ajouter
  */
-void addBlock(Blockchain * bc, Block * b) {
+void addBlock(Blockchain *bc, Block *b) {
 
-	ChainElement *ce = malloc(sizeof(ChainElement));
-	ce->block = b;
-
-	//Finalisation des informations du bloc
-	if (bc->last == NULL) {
-		//Nettoyage du hash car il n'y a pas de bloc précédent
-		for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
-			b->previousHash[i] = '\0';
-	} else {
-		//Informations pour les blocs suivants
-		memcpy(b->previousHash, bc->last->blockHash, SHA256_BLOCK_SIZE);
-	}
-	b->index = bc->blockCount;
-	//b->timestamp = ??? (TODO)
+	//Ajout des informations liées à la Blockchain
+	b->index = dequeSize(bc->blocks);
+	strcpy(b->previousHash, ((Block *) front(bc->blocks))->currentHash);
+	calcBlockMerkleRoot(b);
 
 	//Calcul du hash
-	updateNonce(b, ce->blockHash, bc->difficulty);
+	calcTrueBlockHash(b, b->currentHash, bc->difficulty);
 
 	//Ajout du bloc à la blockchain
-	ce->prev = bc->last;
-	bc->last = ce;
-	(bc->blockCount)++;
-
+	push_front(bc->blocks, b);
 }
+
+///TODO Il faut mettre ça dans un fichier à part genre randomGeneration.c
 
 /**
  * @author Chasse (Nicolas) generation random de blocs [wip]
@@ -182,23 +180,20 @@ void addBlock(Blockchain * bc, Block * b) {
  * generation random(aleat) de blocks
  * @return un bloc genere aleatoirement
  */
-Block *random_block(){
+/*Block *random_block(int difficulty){
 	srand(time(NULL));
-	char *root;
-	Block *b= malloc(sizeof(Block));
-	block(b);
-	b->index = rand();
-	b->transactions = random_tb();
-	b->merkleRoot = merkleRoot(b->transactions,root);
+	Block *b = block(rand(), difficulty);
+	b->transactions = randomTransactionList();
+	merkleRoot(b->transactions, b->merkleRoot);
 
 	return b;
-} // pas du tout sur de l'utilisation de la merkle root et
+}*/ // pas du tout sur de l'utilisation de la merkle root et
 
 /**
  * add: verifier qu'un bloc n'est pas identique a un autre ?
  * @return bc une block chain aleatoire de taille aleatoire(a modif)
  */
-Blockchain random_bc(){
+/*Blockchain random_bc(){
 	srand(time(NULL));
 	int r = (rand()%(500-1))+1; //define une taille p-e ?
 	Blockchain *bc = malloc(sizeof(Blockchain));
@@ -207,4 +202,4 @@ Blockchain random_bc(){
 		addBlock(bc, b);
 	}
 	return *bc;
-}
+}*/
