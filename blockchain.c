@@ -80,7 +80,7 @@ Block *block() {
  * Revoie le hash du block.
  * @return Hash du block
  */
-char *getBlockHash(Block *b) {	//TODO je crois que ça sert à rien
+char *getBlockHash(Block *b) {	//TODO je crois que ça sert à rien -- Nicolas: oui, c'est inutile xD
 	return b->currentHash;
 }
 
