@@ -230,3 +230,13 @@ void *ith(const Deque *d, int pos) {
 	while (pos--) t = t->next;
 	return t->data;
 }
+
+/**
+ * Supprime la liste et tout son contenu en le désallouant
+ * @param d Liste à supprimer
+ */
+void delete_deque(Deque *d) {
+	while (!dequeEmpty(d))
+		pop_front(d);
+	free(d);
+}

@@ -102,4 +102,10 @@ void *back(const Deque *d);
  */
 void *ith(const Deque *d, int pos);
 
+/**
+ * Supprime la liste et tout son contenu en le désallouant
+ * @param d Liste à supprimer
+ */
+void delete_deque(Deque *d);
+
 #endif /* DEQUE_H_ */
