@@ -170,6 +170,78 @@ void addBlock(Blockchain *bc, Block *b) {
 	push_front(bc->blocks, b);
 }
 
+/* Fonctions de vérification */
+
+/**
+ * Comparaison de deux hash : 0 = aucune différence, 1 sinon
+ * @param chaine1 premier hash à comparer
+ * @param chaine2 second hash à comparer
+ * @return 0 si aucune différence, 1 sinon
+ */
+int compByte(char *chaine1, char *chaine2) {
+	for (int i = 0; i < SHA256_BLOCK_SIZE*2 + 1; i++)
+		if (chaine1[i] != chaine2[i])
+			return 1;
+	return 0;
+}
+
+/**
+ * vérification 1 : la chaîne commece bien par le bloc génésis et que le
+ * chaînage des hash est valide, et que le hash du bloc est bien celui annoncé.
+ * retour : 0 = OK
+ *			1 = Le premier block n'est pas génésis
+ *			2 = Problème dans le chaînage des hash
+ *			3 = problème hash du bloc
+ */
+int verifBlockchain(Blockchain *b){
+	Deque *d = b->blocks;
+	Block *block = ith(d, dequeSize(d)-1);
+	char *prevHash = block->currentHash;
+	char hash[SHA256_BLOCK_SIZE*2 + 1];
+
+	/* Parcourt tous les blocks sauf le génésis qui sera testé après le for
+	 * Note: La fonction serait plus optimisée si on pouvait profiter des pointeurs entre les blocs.
+	 * Éventuellement penser à créer une fonction map_reduce() pour nos deque */
+	for (int i = dequeSize(d)-1; i > -1; i--) {
+		block = ith(d, i);
+		/* test hash des blocks */
+		calcBlockHash(block, hash);
+		if (compByte(hash, block->currentHash) != 0) {
+			return 3;
+		}
+		/* test chaînage des hash */
+		if (compByte(getBlockHash(block), prevHash) != 0) {
+			return 2;
+		}
+		if ( i!= 0) prevHash = block->previousHash;
+	}
+
+	/* vérification que le premier block est le block génésis */
+	if (block->previousHash != 0 || block->nonce != 0 || dequeSize(block->transactions) != 1 || strcmp((char *) front(block->transactions), "genesis") != 0)
+		return 1;
+	return 0;
+}
+
+/**
+ * Vérification 2 : pour chaque block le hash Merkle Root correspond bien aux transactions de ce block : 0 = ok, 1 sinon
+ */
+int verifMerkleRoot(Blockchain *b) {
+	int i;
+	Deque *d = b->blocks;
+	Block *block = front(d);
+	char root[SHA256_BLOCK_SIZE*2 + 1];
+
+	for (i = 0; i < dequeSize(d); i++) {
+		block = ith(d, i);
+		calcMerkleRoot(block->transactions, root);
+		if (compByte(block->merkleRoot, root) != 0) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 ///TODO Il faut mettre ça dans un fichier à part genre randomGeneration.c
 
 /**
