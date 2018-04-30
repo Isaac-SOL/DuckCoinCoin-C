@@ -54,17 +54,17 @@ Block *block() {
 
 	Block *b = malloc(sizeof(Block));
 	
-	b->previousHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	b->previousHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 		if (b->previousHash == NULL) {
 			printf("Erreur d'allocation mémoire pour block.\n");
 			exit(1);
 		}
-	b->currentHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	b->currentHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 	if (b->currentHash == NULL) {
 		printf("Erreur d'allocation mémoire pour block.\n");
 		exit(1);
 	}
-	b->merkleRoot = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	b->merkleRoot = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 	if (b->merkleRoot == NULL) {
 		printf("Erreur d'allocation mémoire pour block.\n");
 		exit(1);
@@ -113,7 +113,7 @@ char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut t
  * @param b Pointeur vers le block à lire
  * @param hash Reçoit le hash du bloc en sortie
  */
-void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1]) {
 	sha256ofString((BYTE *) blockToString(b), hash);
 }
 
@@ -123,7 +123,7 @@ void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
  * @param difficulty Difficulté à satisfaire
  * @return Booléen, renvoie true si le hash correspond, false sinon.
  */
-int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
+int verifyHash(const char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
 	for (int i = 0; i < difficulty; i++)
 		if (hash[i] != '0')
 			return 0;
@@ -136,7 +136,7 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
 	calcBlockHash(b, hash);
 	while (!verifyHash(hash, difficulty)) {
 		(b->nonce)++;

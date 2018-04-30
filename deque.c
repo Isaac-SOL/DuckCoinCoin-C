@@ -251,5 +251,6 @@ void dequeMap(const Deque *d, void (*f) (void *)) {
 void delete_deque(Deque *d) {
 	while (!dequeEmpty(d))
 		pop_front(d);
+	freeNode(d->sent);
 	free(d);
 }

@@ -44,6 +44,6 @@ char *transactionsToString(const TransactionList *tl);
  * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void calcMerkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
+void calcMerkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE*2 + 1]);
 
 #endif /* TRANSACTION_H_ */
