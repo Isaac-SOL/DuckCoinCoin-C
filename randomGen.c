@@ -31,10 +31,10 @@
  * generation transaction random
  * @return transaction aleatoire
  */
-Transaction *random_trans(){
+Transaction random_trans(){
 	srand(time(NULL));
 	int i = (rand()%(330-1))+1;
-	Transaction *t;
+	Transaction t; //Il faut allouer la mémoire avant le sprintf!
 	sprintf(t, "Source-Destination: %d", i);
 	return t;
 }
@@ -59,8 +59,8 @@ TransactionList *random_tl(){
  */
 Block *random_block(){
 	Block *b = block();
-	char hash;
-	Transaction *t = random_trans();
+	//char hash;  -- "Inutilisé" selon le compilateur
+	Transaction t = random_trans();
 	addTransactionToBlock(b, t);
 	return b;
 }
@@ -73,13 +73,13 @@ Blockchain *random_blockchain(){
 	srand(time(NULL));
 	int r = (rand()%(420-1))+1;
 	Blockchain *bc = blockchain(r);
-	for (int i = 0; i<r; i++){
-		if (i==0)
+	for (int i = 0; i < r; i++) {
+		if (i == 0)
 			addGenesis(bc);
 		Block *b = random_block();
 		addBlock(bc, b);
 	}
-	return *bc;
+	return bc;
 }
 
 

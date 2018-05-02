@@ -10,14 +10,14 @@
 #include "sha256/sha256.h"
 #include "deque.h"
 #include "transaction.h"
+#include "blockchain.h"
 #include "util.h"
-
 
 /**
  * creation transaction aleatoire
  * @return une transaction aleatoire
  */
-Transaction *random_trans();
+Transaction random_trans();
 
 //Transaction *random_tl();
 /**
@@ -31,3 +31,5 @@ Block *random_block();
  * @return une blockchain aleatoire
  */
 Blockchain *random_blockchain();
+
+#endif /* RANDOMGEN_H_ */
