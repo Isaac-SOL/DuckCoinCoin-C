@@ -13,11 +13,21 @@
 #include "util.h"
 
 
-
+/**
+ * creation transaction aleatoire
+ * @return une transaction aleatoire
+ */
 Transaction *random_trans();
 
 //Transaction *random_tl();
-
+/**
+ * creation block aleatoire
+ * @return un bloc aleatoire
+ */
 Block *random_block();
 
+/**
+ * creation transaction aleatoire
+ * @return une blockchain aleatoire
+ */
 Blockchain *random_blockchain();

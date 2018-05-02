@@ -74,9 +74,9 @@ Blockchain *random_blockchain(){
 	int r = (rand()%(420-1))+1;
 	Blockchain *bc = blockchain(r);
 	for (int i = 0; i<r; i++){
-		Block *b = random_block();
 		if (i==0)
 			addGenesis(bc);
+		Block *b = random_block();
 		addBlock(bc, b);
 	}
 	return *bc;
