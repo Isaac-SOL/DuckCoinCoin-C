@@ -55,6 +55,15 @@ char *transactionsToString(const TransactionList *tl) {
 }
 
 /**
+ * Affiche le contenu d'une transaction. Peut être utilisé par dequeMap().
+ * @param vt La transaction à afficher
+ */
+void afficherTransaction(void *vt) {
+	char *t = (char *) vt;
+	printf("    %s\n", t);
+}
+
+/**
  * Calcul de la merkle root d'un TransactionBlock.
  * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock

@@ -6,6 +6,7 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -42,6 +43,11 @@ struct s_blockchain {
  */
 Blockchain *blockchain(int difficulty) {
 	Blockchain *bc = malloc(sizeof(Blockchain));
+	if (bc == NULL) {
+		printf("Erreur d'allocation mémoire pour blockchain.\n");
+		exit(1);
+	}
+
 	bc->difficulty = difficulty;
 	bc->blocks = deque();
 	return bc;
@@ -53,6 +59,10 @@ Blockchain *blockchain(int difficulty) {
 Block *block() {
 
 	Block *b = malloc(sizeof(Block));
+	if (b == NULL) {
+		printf("Erreur d'allocation mémoire pour block.\n");
+		exit(1);
+	}
 	
 	b->previousHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 		if (b->previousHash == NULL) {
@@ -109,6 +119,43 @@ char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut t
 }
 
 /**
+ * Affiche un hash.
+ * @param hash Hash à afficher.
+ */
+void afficherHash(char hash[SHA256_BLOCK_SIZE*2 + 1]) {
+	for (int i = 0; i < SHA256_BLOCK_SIZE*2 + 1; i++)
+		printf("%c", hash[i]);
+}
+
+/**
+ * Affiche le contenu d'un block. Peut être utilisé par dequeMap().
+ * @param vb Block à afficher.
+ */
+void afficherBlock(void *vb) {
+	Block *b = (Block *) vb;
+	printf("  ----  BLOCK %d  ----\n", b->index);
+	printf("Créé le %s\n", b->timestamp);
+	printf("Transactions:\n");
+	dequeMap(b->transactions, afficherTransaction);
+	printf("Hash:          ");
+	afficherHash(b->currentHash);
+	printf("\nHash Précédent:");
+	afficherHash(b->previousHash);
+	printf("\nMerkle Root:   ");
+	afficherHash(b->merkleRoot);
+	printf("\nNonce: %d\n\n", b->nonce);
+}
+
+/**
+ * Affiche le contenu de la blockchain sur la sortie standard.
+ * @param bc Blockchain dont il faut afficher le contenu.
+ */
+void afficherBlockchain(Blockchain *bc) {
+	printf("+----------+\n|BLOCKCHAIN| Blocks: %d, Difficulté: %d\n+----------+\n\n", dequeSize(bc->blocks), bc->difficulty);
+	dequeMap(bc->blocks, afficherBlock);
+}
+
+/**
  * Renvoie le hash du block donné sur 32 octets.
  * @param b Pointeur vers le block à lire
  * @param hash Reçoit le hash du bloc en sortie
@@ -149,6 +196,26 @@ void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficu
  */
 void calcBlockMerkleRoot(Block *b) {
 	calcMerkleRoot(b->transactions, b->merkleRoot);
+}
+
+/**
+ * Ajoute le block Génésis à une blockchain vide.
+ * @param bc Blockchain
+ */
+void addGenesis(Blockchain *bc) {
+	assert(dequeEmpty(bc->blocks));
+	Block *b = block();
+	b->index = 0;
+	strcpy(b->previousHash, "0");
+
+	char *transaction = malloc(TRANSACTION_LEN * sizeof(char));
+	strcpy(transaction, "Genesis");
+	addTransactionToBlock(b, transaction);
+
+	calcBlockMerkleRoot(b);
+	calcBlockHash(b, b->currentHash);
+
+	push_front(bc->blocks, b);
 }
 
 /**
@@ -216,7 +283,7 @@ int verifBlockchain(Blockchain *b){
 		if ( i!= 0) prevHash = block->previousHash;
 	}
 
-	/* vérification que le premier block est le block génésis */
+	/* Vérification que le premier block est le block génésis */
 	if (block->previousHash != 0 || block->nonce != 0 || dequeSize(block->transactions) != 1 || strcmp((char *) front(block->transactions), "genesis") != 0)
 		return 1;
 	return 0;
