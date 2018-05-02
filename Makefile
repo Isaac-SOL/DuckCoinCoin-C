@@ -54,6 +54,8 @@ mrproper: clean
 	rm -rf $(OUTPUTDIR)/$(EXEC)
 
 #Dépendances spécifiques
+$(COMPILDIR)/randomGen.o: sha256/sha256_utils.h blockchain.h deque.h transaction.h util.h 
+
 $(COMPILDIR)/sha256.o: sha256/sha256.h
 
 $(COMPILDIR)/blockchain.o: util.h blockchain.h sha256/sha256.h transaction.h

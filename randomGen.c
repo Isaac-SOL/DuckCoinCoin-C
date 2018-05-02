@@ -20,9 +20,7 @@
 #include "sha256/sha256_utils.h"
 #include "blockchain.h"
 #include "transaction.h"
-#include "transaction.h"
 #include "deque.h"
-#include "sha256/sha256_utils.h"
 #include "util.h"
 
 
