@@ -14,8 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <random.h>
-
+#include "randomGen.h"
 
 #include "sha256/sha256_utils.h"
 #include "blockchain.h"
@@ -39,7 +38,7 @@ Transaction *random_trans(){
 	sprintf(t, "Source-Destination: %d", i);
 	return t;
 }
-/*
+/*//pas sur de devoir faire ca
 TransactionList *random_tl(){
 	srand(time(NULL));
 	int sizet = (rand()%(330-1))+1; // taille TransactionList
@@ -62,11 +61,7 @@ Block *random_block(){
 	Block *b = block();
 	char hash;
 	Transaction *t = random_trans();
-	addTransactionToBlock(b, t)
-	push_back((b->transactions), t); //je suis pas sûr de devoir faire ca
-	calcTrueBlockHash(b, hash)
-	b->currentHash = hash;
-	calcBlockMerkleRoot(b); //pas sur non plus
+	addTransactionToBlock(b, t);
 	return b;
 }
 
@@ -80,8 +75,8 @@ Blockchain *random_blockchain(){
 	Blockchain *bc = blockchain(r);
 	for (int i = 0; i<r; i++){
 		Block *b = random_block();
-		if (i!=0)
-			b->previousHash = ith(bc, i-1);
+		if (i==0)
+			addGenesis(bc);
 		addBlock(bc, b);
 	}
 	return *bc;
