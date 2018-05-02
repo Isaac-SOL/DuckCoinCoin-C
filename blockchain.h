@@ -51,11 +51,17 @@ void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]);
 char *blockToString(const Block *b);
 
 /**
+ * Affiche le contenu de la blockchain sur la sortie standard.
+ * @param bc Blockchain dont il faut afficher le contenu.
+ */
+void afficherBlockchain(Blockchain *bc);
+
+/**
  * Renvoie le hash du block donné sur 32 octets.
  * @param b Pointeur vers le block à modifier
  * @param hash Reçoit le hash du bloc en sortie
  */
-void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]);
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1]);
 
 /**
  * Vérifie que le hash reçu corresponde bien à la difficulté.
@@ -63,7 +69,7 @@ void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]);
  * @param difficulty Difficulté à satisfaire
  * @return Booléen, renvoie true si le hash correspond, false sinon.
  */
-int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty);
+int verifyHash(const char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty);
 
 /**
  * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficulté.
@@ -71,12 +77,18 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty);
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty);
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty);
 
 /**
  * Calcule la Merkle Root des transactions du block et la range dans la variable à cet effet
  */
 void calcBlockMerkleRoot(Block *b);
+
+/**
+ * Ajoute le block Génésis à une blockchain vide.
+ * @param bc Blockchain
+ */
+void addGenesis(Blockchain *bc);
 
 /**
  * Ajoute un block à une Blockchain.

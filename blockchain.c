@@ -6,6 +6,7 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -42,6 +43,11 @@ struct s_blockchain {
  */
 Blockchain *blockchain(int difficulty) {
 	Blockchain *bc = malloc(sizeof(Blockchain));
+	if (bc == NULL) {
+		printf("Erreur d'allocation mémoire pour blockchain.\n");
+		exit(1);
+	}
+
 	bc->difficulty = difficulty;
 	bc->blocks = deque();
 	return bc;
@@ -53,18 +59,22 @@ Blockchain *blockchain(int difficulty) {
 Block *block() {
 
 	Block *b = malloc(sizeof(Block));
+	if (b == NULL) {
+		printf("Erreur d'allocation mémoire pour block.\n");
+		exit(1);
+	}
 	
-	b->previousHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	b->previousHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 		if (b->previousHash == NULL) {
 			printf("Erreur d'allocation mémoire pour block.\n");
 			exit(1);
 		}
-	b->currentHash = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	b->currentHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 	if (b->currentHash == NULL) {
 		printf("Erreur d'allocation mémoire pour block.\n");
 		exit(1);
 	}
-	b->merkleRoot = malloc(SHA256_BLOCK_SIZE * sizeof(char));
+	b->merkleRoot = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 	if (b->merkleRoot == NULL) {
 		printf("Erreur d'allocation mémoire pour block.\n");
 		exit(1);
@@ -80,7 +90,7 @@ Block *block() {
  * Revoie le hash du block.
  * @return Hash du block
  */
-char *getBlockHash(Block *b) {	//TODO je crois que ça sert à rien -- Nicolas: oui, c'est inutile xD
+char *getBlockHash(Block *b) {	//TODO je crois que ça sert à rien
 	return b->currentHash;
 }
 
@@ -109,11 +119,48 @@ char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut t
 }
 
 /**
+ * Affiche un hash.
+ * @param hash Hash à afficher.
+ */
+void afficherHash(char hash[SHA256_BLOCK_SIZE*2 + 1]) {
+	for (int i = 0; i < SHA256_BLOCK_SIZE*2 + 1; i++)
+		printf("%c", hash[i]);
+}
+
+/**
+ * Affiche le contenu d'un block. Peut être utilisé par dequeMap().
+ * @param vb Block à afficher.
+ */
+void afficherBlock(void *vb) {
+	Block *b = (Block *) vb;
+	printf("  ----  BLOCK %d  ----\n", b->index);
+	printf("Créé le %s\n", b->timestamp);
+	printf("Transactions:\n");
+	dequeMap(b->transactions, afficherTransaction);
+	printf("Hash:          ");
+	afficherHash(b->currentHash);
+	printf("\nHash Précédent:");
+	afficherHash(b->previousHash);
+	printf("\nMerkle Root:   ");
+	afficherHash(b->merkleRoot);
+	printf("\nNonce: %d\n\n", b->nonce);
+}
+
+/**
+ * Affiche le contenu de la blockchain sur la sortie standard.
+ * @param bc Blockchain dont il faut afficher le contenu.
+ */
+void afficherBlockchain(Blockchain *bc) {
+	printf("+----------+\n|BLOCKCHAIN| Blocks: %d, Difficulté: %d\n+----------+\n\n", dequeSize(bc->blocks), bc->difficulty);
+	dequeMap(bc->blocks, afficherBlock);
+}
+
+/**
  * Renvoie le hash du block donné sur 32 octets.
  * @param b Pointeur vers le block à lire
  * @param hash Reçoit le hash du bloc en sortie
  */
-void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1]) {
 	sha256ofString((BYTE *) blockToString(b), hash);
 }
 
@@ -123,7 +170,7 @@ void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE]) {
  * @param difficulty Difficulté à satisfaire
  * @return Booléen, renvoie true si le hash correspond, false sinon.
  */
-int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
+int verifyHash(const char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
 	for (int i = 0; i < difficulty; i++)
 		if (hash[i] != '0')
 			return 0;
@@ -136,7 +183,7 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE], int difficulty) {
  * @param hash Renvoie le hash du bloc une fois la nonce trouvée
  * @param difficulty Difficulté de la blockchain
  */
-void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
 	calcBlockHash(b, hash);
 	while (!verifyHash(hash, difficulty)) {
 		(b->nonce)++;
@@ -149,6 +196,26 @@ void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE], int difficulty) {
  */
 void calcBlockMerkleRoot(Block *b) {
 	calcMerkleRoot(b->transactions, b->merkleRoot);
+}
+
+/**
+ * Ajoute le block Génésis à une blockchain vide.
+ * @param bc Blockchain
+ */
+void addGenesis(Blockchain *bc) {
+	assert(dequeEmpty(bc->blocks));
+	Block *b = block();
+	b->index = 0;
+	strcpy(b->previousHash, "0");
+
+	char *transaction = malloc(TRANSACTION_LEN * sizeof(char));
+	strcpy(transaction, "Genesis");
+	addTransactionToBlock(b, transaction);
+
+	calcBlockMerkleRoot(b);
+	calcBlockHash(b, b->currentHash);
+
+	push_front(bc->blocks, b);
 }
 
 /**
@@ -168,6 +235,78 @@ void addBlock(Blockchain *bc, Block *b) {
 
 	//Ajout du bloc à la blockchain
 	push_front(bc->blocks, b);
+}
+
+/* Fonctions de vérification */
+
+/**
+ * Comparaison de deux hash : 0 = aucune différence, 1 sinon
+ * @param chaine1 premier hash à comparer
+ * @param chaine2 second hash à comparer
+ * @return 0 si aucune différence, 1 sinon
+ */
+int compByte(char *chaine1, char *chaine2) {
+	for (int i = 0; i < SHA256_BLOCK_SIZE*2 + 1; i++)
+		if (chaine1[i] != chaine2[i])
+			return 1;
+	return 0;
+}
+
+/**
+ * vérification 1 : la chaîne commece bien par le bloc génésis et que le
+ * chaînage des hash est valide, et que le hash du bloc est bien celui annoncé.
+ * retour : 0 = OK
+ *			1 = Le premier block n'est pas génésis
+ *			2 = Problème dans le chaînage des hash
+ *			3 = problème hash du bloc
+ */
+int verifBlockchain(Blockchain *b){
+	Deque *d = b->blocks;
+	Block *block = ith(d, dequeSize(d)-1);
+	char *prevHash = block->currentHash;
+	char hash[SHA256_BLOCK_SIZE*2 + 1];
+
+	/* Parcourt tous les blocks sauf le génésis qui sera testé après le for
+	 * Note: La fonction serait plus optimisée si on pouvait profiter des pointeurs entre les blocs.
+	 * Éventuellement penser à créer une fonction map_reduce() pour nos deque */
+	for (int i = dequeSize(d)-1; i > -1; i--) {
+		block = ith(d, i);
+		/* test hash des blocks */
+		calcBlockHash(block, hash);
+		if (compByte(hash, block->currentHash) != 0) {
+			return 3;
+		}
+		/* test chaînage des hash */
+		if (compByte(getBlockHash(block), prevHash) != 0) {
+			return 2;
+		}
+		if ( i!= 0) prevHash = block->previousHash;
+	}
+
+	/* Vérification que le premier block est le block génésis */
+	if (block->previousHash != 0 || block->nonce != 0 || dequeSize(block->transactions) != 1 || strcmp((char *) front(block->transactions), "genesis") != 0)
+		return 1;
+	return 0;
+}
+
+/**
+ * Vérification 2 : pour chaque block le hash Merkle Root correspond bien aux transactions de ce block : 0 = ok, 1 sinon
+ */
+int verifMerkleRoot(Blockchain *b) {
+	int i;
+	Deque *d = b->blocks;
+	Block *block = front(d);
+	char root[SHA256_BLOCK_SIZE*2 + 1];
+
+	for (i = 0; i < dequeSize(d); i++) {
+		block = ith(d, i);
+		calcMerkleRoot(block->transactions, root);
+		if (compByte(block->merkleRoot, root) != 0) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 ///TODO Il faut mettre ça dans un fichier à part genre randomGeneration.c
@@ -203,3 +342,17 @@ void addBlock(Blockchain *bc, Block *b) {
 	}
 	return *bc;
 }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -55,43 +55,67 @@ char *transactionsToString(const TransactionList *tl) {
 }
 
 /**
+ * Affiche le contenu d'une transaction. Peut être utilisé par dequeMap().
+ * @param vt La transaction à afficher
+ */
+void afficherTransaction(void *vt) {
+	char *t = (char *) vt;
+	printf("    %s\n", t);
+}
+
+/**
  * Calcul de la merkle root d'un TransactionBlock.
  * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE]) { //TODO il faut tout changer, cet algorithme n'est plus du tout valide
+void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE*2 + 1]) {
+	TransactionList *newList, *nextList;
 
-	char merkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
-	char nextMerkleTree[MAX_TRANSACTIONS][SHA256_BLOCK_SIZE];
+	newList = deque();
+	nextList = deque();
+
+	//Hash de chaque transaction
 	for (int i = 0; i < dequeSize(tl); i++) {
-		SHA256_CTX ctx;
-		sha256_init(&ctx);
-		sha256_update(&ctx, (BYTE *) ith(tl, i), TRANSACTION_LEN);
-		sha256_final(&ctx, (BYTE *) merkleTree[i]);
+		char hash[SHA256_BLOCK_SIZE*2 + 1];
+		char *dhash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+		sha256ofString((BYTE *) ith(tl, i), hash);
+		memcpy(dhash, hash, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+		push_back(newList, dhash);
 	}
 
-	int len = dequeSize(tl);
-	while (len > 1) {	//TODO optimiser cette partie (pas de memcpy nécessaire dans tous les cas)
-		for (int i = 0; i < len; i += 2) {
-			char concat[SHA256_BLOCK_SIZE * 2];
-			if (i - len == 1) {
-				memcpy(concat, merkleTree[i], SHA256_BLOCK_SIZE);
-				memcpy(concat + SHA256_BLOCK_SIZE, merkleTree[i], SHA256_BLOCK_SIZE);
-			} else {
-				memcpy(concat, merkleTree[i], SHA256_BLOCK_SIZE * 2);
-			}
-			SHA256_CTX ctx;
-			sha256_init(&ctx);
-			sha256_update(&ctx, (BYTE *) concat, SHA256_BLOCK_SIZE * 2);
-			sha256_final(&ctx, (BYTE *) nextMerkleTree[i/2]);
+	//Concaténation et hash successivement
+	while (dequeSize(newList) != 1) {
+		while (!dequeEmpty(newList)) {
+			//Création du bloc contenant la concaténation
+			char *cat = malloc((SHA256_BLOCK_SIZE*4 + 3) * sizeof(char));
+			char *nextValue;
+			nextValue = front(newList);
+			pop_front(newList);
+			memcpy(cat, nextValue, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+			if (!dequeEmpty(newList)) {
+				nextValue = front(newList);
+				pop_front(newList);
+				memcpy(cat + (SHA256_BLOCK_SIZE*2 + 1), nextValue, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
+			} else memcpy(cat + (SHA256_BLOCK_SIZE*2 + 1), cat, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
+			cat[SHA256_BLOCK_SIZE*4 + 2] = '\0'; //NULL-terminated pour utiliser la fonction sha256OfString()
+
+			//Cacul du hash et ajout à la liste
+			char hash[SHA256_BLOCK_SIZE*2 + 1];
+			char *dhash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+			sha256ofString((BYTE *) cat, hash);
+			memcpy(dhash, hash, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+			push_back(nextList, dhash);
 		}
-
-		len = len/2 + len%2;
-		memcpy(merkleTree, nextMerkleTree, sizeof(merkleTree));
+		delete_deque(newList);
+		newList = nextList;
+		nextList = deque();
 	}
 
-	memcpy(root, merkleTree[0], SHA256_BLOCK_SIZE);
-}	//TODO tout ceci m'a l'air bien dégueulasse
+	//Enregistrement du résultat et libération de la mémoire
+	memcpy(root, front(newList), (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+	delete_deque(newList);
+	delete_deque(nextList);
+}	//Bon c'est pas joli-joli mais ça devrait fonctionner
 
 ///TODO Mettra ça dans un fichier à part, genre randomGeneration.c
 

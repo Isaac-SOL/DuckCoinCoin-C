@@ -230,3 +230,27 @@ void *ith(const Deque *d, int pos) {
 	while (pos--) t = t->next;
 	return t->data;
 }
+
+/**
+ * Effectue une fonction sur chacun des éléments de la liste
+ * @param d Liste à utiliser
+ * @param f Fonction à appeler sur chaque élément
+ */
+void dequeMap(const Deque *d, void (*f) (void *)) {
+	DequeNode *n = d->sent->next;
+	while (n != d->sent) {
+		f(n->data);
+		n = n->next;
+	}
+}
+
+/**
+ * Supprime la liste et tout son contenu en le désallouant
+ * @param d Liste à supprimer
+ */
+void delete_deque(Deque *d) {
+	while (!dequeEmpty(d))
+		pop_front(d);
+	freeNode(d->sent);
+	free(d);
+}

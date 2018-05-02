@@ -102,4 +102,17 @@ void *back(const Deque *d);
  */
 void *ith(const Deque *d, int pos);
 
+/**
+ * Effectue une fonction sur chacun des éléments de la liste
+ * @param d Liste à utiliser
+ * @param f Fonction à appeler sur chaque élément
+ */
+void dequeMap(const Deque *d, void (*f) (void *));
+
+/**
+ * Supprime la liste et tout son contenu en le désallouant
+ * @param d Liste à supprimer
+ */
+void delete_deque(Deque *d);
+
 #endif /* DEQUE_H_ */

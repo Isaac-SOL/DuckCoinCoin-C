@@ -40,10 +40,16 @@ int transactionListIsFull(const TransactionList *tl);
 char *transactionsToString(const TransactionList *tl);
 
 /**
+ * Affiche le contenu d'une transaction. Peut être utilisé par dequeMap().
+ * @param vt La transaction à afficher
+ */
+void afficherTransaction(void *vt);
+
+/**
  * Calcul de la merkle root d'un TransactionBlock.
  * @param tl Pointeur vers le TransactionBlock à lire
  * @param root Renvoie la merkleRoot du TransactionBlock
  */
-void calcMerkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE]);
+void calcMerkleRoot(const TransactionList *tl, char hash[SHA256_BLOCK_SIZE*2 + 1]);
 
 #endif /* TRANSACTION_H_ */
