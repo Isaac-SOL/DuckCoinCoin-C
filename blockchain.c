@@ -184,6 +184,7 @@ int verifyHash(const char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
  * @param difficulty Difficulté de la blockchain
  */
 void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
+	b->nonce = 0;
 	calcBlockHash(b, hash);
 	while (!verifyHash(hash, difficulty)) {
 		(b->nonce)++;
@@ -237,7 +238,9 @@ void addBlock(Blockchain *bc, Block *b) {
 	push_front(bc->blocks, b);
 }
 
-/* Fonctions de vérification */
+/* ************************* *\
+|* Fonctions de Vérification *|
+\* ************************* */
 
 /**
  * Comparaison de deux hash : 0 = aucune différence, 1 sinon
@@ -260,7 +263,7 @@ int compByte(char *chaine1, char *chaine2) {
  *			2 = Problème dans le chaînage des hash
  *			3 = problème hash du bloc
  */
-int verifBlockchain(Blockchain *b){
+int verifBlockchain(Blockchain *b) {
 	Deque *d = b->blocks;
 	Block *block = ith(d, dequeSize(d)-1);
 	char *prevHash = block->currentHash;
@@ -309,36 +312,105 @@ int verifMerkleRoot(Blockchain *b) {
 	return 0;
 }
 
-///TODO Il faut mettre ça dans un fichier à part genre randomGeneration.c
+/* ****************** *\
+|* Fonctions de Cheat *|
+\* ****************** */
 
 /**
- * @author Chasse (Nicolas) generation random de blocs [wip]
+ * Cheater de block (suppression d'un block dans la blockchain) , avec Vérification 1 en sortie,
+ * exception pour le block génésis (position 0) le block suivant prendra le rôle du block génésis
+ * @param b Blockchain à modifier
+ * @param num Index du block à supprimer
+ * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
+int CheatBlock(Blockchain *b, int num) {
+	double temps;
+	clock_t start;
+	start = clock();
+
+	if (num <= dequeSize(b->blocks)) { //Vérification que l'index est valide TODO vérifier que num est positif, non?
+		int i;
+
+		if (num != 0) { //Cas Block normal
+			b->blocks = remove_at(b->blocks, num); //Suppression
+
+			Block *prevBlock, *nextBlock;
+			i = num;
+			while(i < dequeSize(b->blocks)) { //Modification en chaîne des blocks suivants pour l'intégrité
+				nextBlock = ith(b->blocks, i);
+				prevBlock = ith(b->blocks, i-1);
+				nextBlock->index = i;
+				nextBlock->previousHash = prevBlock->currentHash;
+				calcTrueBlockHash(nextBlock, nextBlock->currentHash, b->difficulty);
+				i++;
+			}
+
+		} else { //Cas Génésis TODO En rediscuter
+			i = 0;
+			Block *d2;
+			Block *d;
+			b->blocks = remove_at(b->blocks, num);
+			d = ith(b->blocks, i);
+			d->index = 0;
+			d->previousHash = "0";
+			char *transaction = malloc(TRANSACTION_LEN * sizeof(char));
+			strcpy(transaction, "Genesis");
+			d->transactions = NULL;
+			addTransactionToBlock(d, transaction);
+			calcBlockMerkleRoot(d);
+			calcBlockHash(d, d->currentHash);
+
+			i=1;
+			while (i < dequeSize(b->blocks)) {
+				d = ith(b->blocks, i);
+				d2 = ith(b->blocks, i-1);
+				d->index = dequeSize(b->blocks);
+				d->previousHash = d2->currentHash;
+				calcTrueBlockHash(d, d->currentHash, b->difficulty);
+				i++;
+			}
+		}
+	} //TODO rajouter un else pour indiquer à l'utlisateur qu'il est nul?
+
+	temps = (double) (clock() - start) / (double) CLOCKS_PER_SEC;
+	printf("temps d execution : %.2f secondes\n", temps);
+	return verifBlockchain(b);
+}
 
 /**
- * generation random(aleat) de blocks
- * @return un bloc genere aleatoirement
+ * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain) , avec Vérification 2 en sortie,
+ * exception pour le block génésis (position 0)
+ * @param b Blockchain à modifier
+ * @param numB Numéro du block à modifier
+ * @param numT Numéro de la transaction à supprimer
+ * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-/*Block *random_block(int difficulty){
-	srand(time(NULL));
-	Block *b = block(rand(), difficulty);
-	b->transactions = randomTransactionList();
-	merkleRoot(b->transactions, b->merkleRoot);
+int CheatTransaction(Blockchain *b, int numB, int numT) {
+	double temps;
+	clock_t start;
+	start = clock();
 
-	return b;
-}*/ // pas du tout sur de l'utilisation de la merkle root et
+	if (numB <= dequeSize(b->blocks) && numB != 0) { //Vérification de l'index TODO vérifier qu'il est positif?
+		Block *t = ith(b->blocks, numB);
 
-/**
- * add: verifier qu'un bloc n'est pas identique a un autre ?
- * @return bc une block chain aleatoire de taille aleatoire(a modif)
- */
-/*Blockchain random_bc(){
-	srand(time(NULL));
-	int r = (rand()%(500-1))+1; //define une taille p-e ?
-	Blockchain *bc = malloc(sizeof(Blockchain));
-	for (int i = 0; i<r; i++){
-		Block *b = random_block();
-		addBlock(bc, b);
-	}
-	return *bc;
-}*/
+		int i;
+		if (numT < dequeSize(t->transactions)) { //Vérification de l'index de transaction TODO positif?
+			t->transactions = remove_at(t->transactions, numT); //Suppression
+
+			i = numB;
+			Block *prevBlock, *nextBlock;
+			while (i < dequeSize(b->blocks)) {
+				nextBlock = ith(b->blocks, i);
+				prevBlock = ith(b->blocks, i-1);
+				calcBlockMerkleRoot(nextBlock);
+				nextBlock->previousHash = prevBlock->currentHash;
+				calcTrueBlockHash(nextBlock, nextBlock->currentHash, b->difficulty);
+				i++;
+			}
+		}
+	} //TODO rajouter un else pour indiquer à l'utlisateur qu'il est nul?
+
+	temps = (double) (clock() - start) / (double) CLOCKS_PER_SEC;
+	printf("temps d execution : %.2f secondes\n", temps);
+	return verifMerkleRoot(b);
+}

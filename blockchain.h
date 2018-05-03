@@ -97,4 +97,54 @@ void addGenesis(Blockchain *bc);
  */
 void addBlock(Blockchain *bc, Block *b);
 
+/* ************************* *\
+|* Fonctions de Vérification *|
+\* ************************* */
+
+/**
+ * Comparaison de deux hash : 0 = aucune différence, 1 sinon
+ * @param chaine1 premier hash à comparer
+ * @param chaine2 second hash à comparer
+ * @return 0 si aucune différence, 1 sinon
+ */
+int compByte(char *chaine1, char *chaine2);
+
+/**
+ * vérification 1 : la chaîne commece bien par le bloc génésis et que le
+ * chaînage des hash est valide, et que le hash du bloc est bien celui annoncé.
+ * retour : 0 = OK
+ *			1 = Le premier block n'est pas génésis
+ *			2 = Problème dans le chaînage des hash
+ *			3 = problème hash du bloc
+ */
+int verifBlockchain(Blockchain *b);
+
+/**
+ * Vérification 2 : pour chaque block le hash Merkle Root correspond bien aux transactions de ce block : 0 = ok, 1 sinon
+ */
+int verifMerkleRoot(Blockchain *b);
+
+/* ****************** *\
+|* Fonctions de Cheat *|
+\* ****************** */
+
+/**
+ * Cheater de block (suppression d'un block dans la blockchain) , avec Vérification 1 en sortie,
+ * exception pour le block génésis (position 0) le block suivant prendra le rôle du block génésis
+ * @param b Blockchain à modifier
+ * @param num Index du block à supprimer
+ * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
+ */
+int CheatBlock(Blockchain *b, int num);
+
+/**
+ * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain) , avec Vérification 2 en sortie,
+ * exception pour le block génésis (position 0)
+ * @param b Blockchain à modifier
+ * @param numB Numéro du block à modifier
+ * @param numT Numéro de la transaction à supprimer
+ * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
+ */
+int CheatTransaction(Blockchain *b, int numB, int numT);
+
 #endif /* BLOCKCHAIN_H_ */
