@@ -176,9 +176,8 @@ void messageValidite(int code);
  * exception pour le block génésis (position 0) le block suivant prendra le rôle du block génésis
  * @param b Blockchain à modifier
  * @param num Index du block à supprimer
- * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int cheatBlock(Blockchain *b, int num);
+void cheatBlock(Blockchain *b, int num);
 
 /**
  * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain) , avec Vérification 2 en sortie,
@@ -186,8 +185,7 @@ int cheatBlock(Blockchain *b, int num);
  * @param b Blockchain à modifier
  * @param numB Numéro du block à modifier
  * @param numT Numéro de la transaction à supprimer
- * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int cheatTransaction(Blockchain *b, int numB, int numT);
+void cheatTransaction(Blockchain *b, int numB, int numT);
 
 #endif /* BLOCKCHAIN_H_ */

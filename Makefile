@@ -62,4 +62,4 @@ $(COMPILDIR)/blockchain.o: util.h blockchain.h sha256/sha256.h transaction.h
 
 $(COMPILDIR)/transaction.o: util.h transaction.h sha256/sha256.h
 
-$(COMPILDIR)/main.o: util.h blockchain.h sha256/sha256.h transaction.h
+$(COMPILDIR)/main.o: util.h blockchain.h sha256/sha256.h transaction.h randomGen.h

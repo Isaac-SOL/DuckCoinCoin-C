@@ -33,7 +33,6 @@
  * @return transaction aleatoire
  */
 Transaction random_trans(){
-	srand(time(NULL));
 	int i = (rand()%(330-1))+1;
 	Transaction t = malloc(TRANSACTION_LEN * sizeof(char));
 	sprintf(t, "Source-Destination: %d", i);
@@ -45,7 +44,6 @@ Transaction random_trans(){
  * @return un bloc genere aleatoirement
  */
 Block *random_block(){
-	srand(time(NULL));
 	int numTrans = (rand() % (MAX_TRANSACTIONS - 1)) + 1;
 	Block *b = block();
 
@@ -62,13 +60,17 @@ Block *random_block(){
  * @return bc une block chain aleatoire de taille aleatoire(a modif)
  */
 Blockchain *random_blockchain(int difficulty, int nbBlocks){
+	srand(time(NULL));
 	Blockchain *bc = blockchain(difficulty);
 	addGenesis(bc);
 
+	printf("Generation aleatoire de %d Blocks.\n", nbBlocks - 1);
 	for (int i = 1; i < nbBlocks; i++) {
+		printf("Generation et minage du Block #%d...\n", i);
 		Block *b = random_block();
 		addBlock(bc, b);
 	}
+	printf("Generation terminee!\n");
 
 	return bc;
 }

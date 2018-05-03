@@ -52,7 +52,7 @@ struct s_blockchain {
 Blockchain *blockchain(int difficulty) {
 	Blockchain *bc = malloc(sizeof(Blockchain));
 	if (bc == NULL) {
-		printf("Erreur d'allocation mémoire pour blockchain.\n");
+		printf("Erreur d'allocation memoire pour blockchain.\n");
 		exit(1);
 	}
 
@@ -68,23 +68,23 @@ Block *block() {
 
 	Block *b = malloc(sizeof(Block));
 	if (b == NULL) {
-		printf("Erreur d'allocation mémoire pour block.\n");
+		printf("Erreur d'allocation memoire pour block.\n");
 		exit(1);
 	}
 	
 	b->previousHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 		if (b->previousHash == NULL) {
-			printf("Erreur d'allocation mémoire pour block.\n");
+			printf("Erreur d'allocation memoire pour block.\n");
 			exit(1);
 		}
 	b->currentHash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 	if (b->currentHash == NULL) {
-		printf("Erreur d'allocation mémoire pour block.\n");
+		printf("Erreur d'allocation memoire pour block.\n");
 		exit(1);
 	}
 	b->merkleRoot = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 	if (b->merkleRoot == NULL) {
-		printf("Erreur d'allocation mémoire pour block.\n");
+		printf("Erreur d'allocation memoire pour block.\n");
 		exit(1);
 	}
 	b->transactions = deque();
@@ -208,7 +208,7 @@ void addGenesis(Blockchain *bc) {
 	calcBlockMerkleRoot(b);
 	calcBlockHash(b, b->currentHash);
 
-	push_front(bc->blocks, b);
+	push_back(bc->blocks, b);
 }
 
 /**
@@ -220,14 +220,14 @@ void addBlock(Blockchain *bc, Block *b) {
 
 	//Ajout des informations liées à la Blockchain
 	b->index = dequeSize(bc->blocks);
-	strcpy(b->previousHash, ((Block *) front(bc->blocks))->currentHash);
+	strcpy(b->previousHash, ((Block *) back(bc->blocks))->currentHash);
 	calcBlockMerkleRoot(b);
 
 	//Calcul du hash
 	calcTrueBlockHash(b, b->currentHash, bc->difficulty);
 
 	//Ajout du bloc à la blockchain
-	push_front(bc->blocks, b);
+	push_back(bc->blocks, b);
 }
 
 /* *************************** *\
@@ -242,7 +242,7 @@ void addBlock(Blockchain *bc, Block *b) {
 char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut travailler avec
 	char *result = malloc(STR_BLOCK_LEN * sizeof(char));
 	if (result == NULL) {
-		printf("Erreur d'allocation mémoire pour blockToString.\n");
+		printf("Erreur d'allocation memoire pour blockToString.\n");
 		exit(1);
 	}
 	sprintf(result, "%d,%s,%s,%d,%s", b->index, transactionsToString(b->transactions), b->previousHash, b->nonce, b->merkleRoot);
@@ -265,14 +265,14 @@ void afficherHash(char hash[SHA256_BLOCK_SIZE*2 + 1]) {
 void afficherBlock(void *vb) {
 	Block *b = (Block *) vb;
 	printf("  ----  BLOCK %d  ----\n", b->index);
-	printf("Créé le %s\n", b->timestamp);
+	printf("Cree le %s\n", b->timestamp);
 	printf("Transactions:\n");
 	dequeMap(b->transactions, afficherTransaction);
-	printf("Hash:          ");
+	printf("Hash:           ");
 	afficherHash(b->currentHash);
-	printf("\nHash Précédent:");
+	printf("\nHash Precedent: ");
 	afficherHash(b->previousHash);
-	printf("\nMerkle Root:   ");
+	printf("\nMerkle Root:    ");
 	afficherHash(b->merkleRoot);
 	printf("\nNonce: %d\n\n", b->nonce);
 }
@@ -282,7 +282,7 @@ void afficherBlock(void *vb) {
  * @param bc Blockchain dont il faut afficher le contenu.
  */
 void afficherBlockchain(Blockchain *bc) {
-	printf("+----------+\n|BLOCKCHAIN| Blocks: %d, Difficulté: %d\n+----------+\n\n", dequeSize(bc->blocks), bc->difficulty);
+	printf("+----------+\n|BLOCKCHAIN| Blocks: %d, Difficulte: %d\n+----------+\n\n", dequeSize(bc->blocks), bc->difficulty);
 	dequeMap(bc->blocks, afficherBlock);
 }
 
@@ -335,7 +335,7 @@ int verifBlockchain(Blockchain *b) {
 	}
 
 	/* Vérification que le premier block est le block génésis */
-	if (block->previousHash != 0 || block->nonce != 0 || dequeSize(block->transactions) != 1 || strcmp((char *) front(block->transactions), "genesis") != 0)
+	if (strcmp(block->previousHash, "0") != 0 || block->nonce != 0 || dequeSize(block->transactions) != 1 || strcmp((char *) front(block->transactions), "Genesis") != 0)
 		return 1;
 	return 0;
 }
@@ -372,11 +372,11 @@ void messageValidite(int code) {
             break;
 
         case 1:
-            printf("La blockchain est invalide.\nLe premier Block n'est pas le Génésis.\n");
+            printf("La blockchain est invalide.\nLe premier Block n'est pas le Genesis.\n");
             break;
 
         case 2:
-            printf("La blockchain est invalide.\nIl y a une erreur de chaînage des hashes.\n");
+            printf("La blockchain est invalide.\nIl y a une erreur de chainage des hashes.\n");
             break;
 
         case 3:
@@ -397,60 +397,35 @@ void messageValidite(int code) {
  * exception pour le block génésis (position 0) le block suivant prendra le rôle du block génésis
  * @param b Blockchain à modifier
  * @param num Index du block à supprimer
- * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int cheatBlock(Blockchain *b, int num) {
+void cheatBlock(Blockchain *b, int num) {
 	double temps;
 	clock_t start;
 	start = clock();
 
-	if (num <= dequeSize(b->blocks)) { //Vérification que l'index est valide TODO vérifier que num est positif, non?
+	if (num < dequeSize(b->blocks) && num > 0) { //Vérification que l'index est valide
+		printf("Suppression du Block #%d\n", num);
 		int i;
 
-		if (num != 0) { //Cas Block normal
-			b->blocks = remove_at(b->blocks, num); //Suppression
+		b->blocks = remove_at(b->blocks, num); //Suppression
 
-			Block *prevBlock, *nextBlock;
-			i = num;
-			while(i < dequeSize(b->blocks)) { //Modification en chaîne des blocks suivants pour l'intégrité
-				nextBlock = ith(b->blocks, i);
-				prevBlock = ith(b->blocks, i-1);
-				nextBlock->index = i;
-				nextBlock->previousHash = prevBlock->currentHash;
-				calcTrueBlockHash(nextBlock, nextBlock->currentHash, b->difficulty);
-				i++;
-			}
-
-		} else { //Cas Génésis TODO En rediscuter
-			i = 0;
-			Block *d2;
-			Block *d;
-			b->blocks = remove_at(b->blocks, num);
-			d = ith(b->blocks, i);
-			d->index = 0;
-			d->previousHash = "0";
-			char *transaction = malloc(TRANSACTION_LEN * sizeof(char));
-			strcpy(transaction, "Genesis");
-			d->transactions = NULL;
-			addTransactionToBlock(d, transaction);
-			calcBlockMerkleRoot(d);
-			calcBlockHash(d, d->currentHash);
-
-			i=1;
-			while (i < dequeSize(b->blocks)) {
-				d = ith(b->blocks, i);
-				d2 = ith(b->blocks, i-1);
-				d->index = dequeSize(b->blocks);
-				d->previousHash = d2->currentHash;
-				calcTrueBlockHash(d, d->currentHash, b->difficulty);
-				i++;
-			}
+		Block *prevBlock, *nextBlock;
+		i = num;
+		while(i < dequeSize(b->blocks)) { //Modification en chaîne des blocks suivants pour l'intégrité
+			printf("Re-minage du block #%d...\n", i);
+			nextBlock = ith(b->blocks, i);
+			prevBlock = ith(b->blocks, i-1);
+			nextBlock->index = i;
+			nextBlock->previousHash = prevBlock->currentHash;
+			calcTrueBlockHash(nextBlock, nextBlock->currentHash, b->difficulty);
+			i++;
 		}
-	} //TODO rajouter un else pour indiquer à l'utlisateur qu'il est nul?
 
-	temps = (double) (clock() - start) / (double) CLOCKS_PER_SEC;
-	printf("temps d execution : %.2f secondes\n", temps);
-	return verifBlockchain(b);
+		temps = (double) (clock() - start) / (double) CLOCKS_PER_SEC;
+		printf("Temps d'execution : %.2f secondes\n\n", temps);
+
+	}
+	else printf("Le Block #%d n'existe pas. Aucune modification effectuee.\n", num);
 }
 
 /**
@@ -459,23 +434,24 @@ int cheatBlock(Blockchain *b, int num) {
  * @param b Blockchain à modifier
  * @param numB Numéro du block à modifier
  * @param numT Numéro de la transaction à supprimer
- * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int cheatTransaction(Blockchain *b, int numB, int numT) {
+void cheatTransaction(Blockchain *b, int numB, int numT) {
 	double temps;
 	clock_t start;
 	start = clock();
 
-	if (numB <= dequeSize(b->blocks) && numB != 0) { //Vérification de l'index TODO vérifier qu'il est positif?
+	if (numB < dequeSize(b->blocks) && numB > 0) { //Vérification de l'index
 		Block *t = ith(b->blocks, numB);
 
 		int i;
-		if (numT < dequeSize(t->transactions)) { //Vérification de l'index de transaction TODO positif?
+		if (numT < dequeSize(t->transactions) && numT >= 0) { //Vérification de l'index de transaction
+			printf("Suppression de la transaction #%d dans le Block #%d\n", numT, numB);
 			t->transactions = remove_at(t->transactions, numT); //Suppression
 
 			i = numB;
 			Block *prevBlock, *nextBlock;
-			while (i < dequeSize(b->blocks)) {
+			while (i < dequeSize(b->blocks)) { //Modification en chaîne des blocks suivants pour l'intégrité
+				printf("Re-minage du block #%d...\n", i);
 				nextBlock = ith(b->blocks, i);
 				prevBlock = ith(b->blocks, i-1);
 				calcBlockMerkleRoot(nextBlock);
@@ -483,10 +459,12 @@ int cheatTransaction(Blockchain *b, int numB, int numT) {
 				calcTrueBlockHash(nextBlock, nextBlock->currentHash, b->difficulty);
 				i++;
 			}
-		}
-	} //TODO rajouter un else pour indiquer à l'utlisateur qu'il est nul?
 
-	temps = (double) (clock() - start) / (double) CLOCKS_PER_SEC;
-	printf("temps d execution : %.2f secondes\n", temps);
-	return verifMerkleRoot(b);
+			temps = (double) (clock() - start) / (double) CLOCKS_PER_SEC;
+			printf("Temps d'execution : %.2f secondes\n\n", temps);
+
+		}
+		else printf("La Transaction #%d n'existe pas dans le Block #%d. Aucune modification effectuee.\n", numT, numB);
+	}
+	else printf("Le Block #%d n'existe pas. Aucune modification effectuee.\n", numB);
 }

@@ -13,6 +13,7 @@
 #include "sha256/sha256.h"
 #include "blockchain.h"
 #include "transaction.h"
+#include "randomGen.h"
 
 //Variables externes utilisées par getopt()
 extern int optopt;
@@ -45,7 +46,7 @@ int main(int argc, char *argv[]) {
 			case 'b':
 				nbBlocks = (int) atoi(optarg);
 				if (nbBlocks <= 0) {
-					printf("Erreur: Le nombre de blocks doit être strictement positif.\n");
+					printf("Erreur: Le nombre de blocks doit etre strictement positif.\n");
 					correctUse(argv[0]);
 					exit(3);
 				}
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]) {
 			case 'd':
 				difficulty = (int) atoi(optarg);
 				if (difficulty <= 0) {
-					printf("Erreur: La difficulté doit être strictement positive.\n");
+					printf("Erreur: La difficulte doit etre strictement positive.\n");
 					correctUse(argv[0]);
 					exit(3);
 				}
@@ -69,7 +70,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case '?':
 				if (optopt == 'i' || optopt == 'o' || optopt == 'k')
-					printf("Erreur: L'option -%c nécessite un argument.\n", optopt);
+					printf("Erreur: L'option -%c necessite un argument.\n", optopt);
 				else
 					printf("Erreur: Option -%c inconnue.\n", optopt);
 				correctUse(argv[0]);
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]) {
 		exit(3);
 	}
 	if ((!nbBlocks || !difficulty) && !infile) {
-		printf("Erreur: Il manque des paramètres.\n");
+		printf("Erreur: Il manque des parametres.\n");
 		correctUse(argv[0]);
 		exit(3);
 	}
@@ -99,18 +100,18 @@ int main(int argc, char *argv[]) {
 	/* Première étape: Construction et affichage de la blockchain */
 
 	if (nbBlocks > 0) { //Cas génération de blockchain
-		//bc = random_blockchain(); //Ajouter les arguments difficulté et nombre de blocks!
+		bc = random_blockchain(difficulty, nbBlocks); //Ajouter les arguments difficulté et nombre de blocks!
 	} else { //Cas lecture de fichier JSON
-		printf("La lecture de fichiers JSON n'est pas encore supportée.\n");
+		printf("La lecture de fichiers JSON n'est pas encore supportee.\n");
 		exit(0);
 	}
 
-	//afficherBlockchain(bc);
+	afficherBlockchain(bc);
 
 	/* Deuxième étape: Écriture dans un fichier JSON le cas échéant */
 
 	if (outfile && !infile) {
-		printf("La création de fichiers JSON n'est pas encore supportée.\n");
+		printf("La création de fichiers JSON n'est pas encore supportee.\n");
 		exit(0);
 	}
 
@@ -121,36 +122,36 @@ int main(int argc, char *argv[]) {
 		int mode = 0, opt1, opt2;
 
 		while (mode != 3) {
-			printf("Indiquez le mode d'action, puis les options si nécessaires:\n");
+			printf("Indiquez le mode d'action, puis les options si necessaires:\n");
 			printf("Mode 0: Affichage de la Blockchain\n");
-			printf("Mode 1: Suppression d'un block.  Option 1: Index du block à supprimer\n");
-			printf("Mode 2: Suppression d'une transaction.  Option 1: Index du block à modifier,  Option 2: Index de la transaction à supprimer\n");
+			printf("Mode 1: Suppression d'un block.  Option 1: Index du block a supprimer\n");
+			printf("Mode 2: Suppression d'une transaction.  Option 1: Index du block a modifier,  Option 2: Index de la transaction a supprimer\n");
 			printf("Mode 3: Quitter le programme\n");
 			scanf("%d", &mode);
 			switch (mode) {
-				case 0:
+				case 0: //Affichage de la Blockchain
 					fflush(stdin);
 					afficherBlockchain(bc);
 					break;
 
-				case 1:
+				case 1: //Suppression Block
 					scanf("%d", &opt1);
 					fflush(stdin);
-					printf("Suppression du Block n°%d\n", opt1);
-					messageValidite(cheatBlock(bc, opt1));
+					cheatBlock(bc, opt1);
+					messageValidite(verifBlockchain(bc));
 					//maj JSON
 					break;
 
-				case 2:
+				case 2: //Suppression Transaction
 					scanf("%d", &opt1);
 					scanf("%d", &opt2);
 					fflush(stdin);
-					printf("Suppression de la transaction %d dans le Block n°%d\n", opt1, opt2);
-					messageValidite(cheatTransaction(bc, opt1, opt2));
+					cheatTransaction(bc, opt1, opt2);
+					messageValidite(verifBlockchain(bc));
 					//maj JSON
 					break;
 
-				case 3:
+				case 3: //Quitter le programme
 					printf("Fermeture de la console de cheat.\n");
 					break;
 
