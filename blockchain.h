@@ -14,8 +14,16 @@
 #define TIMESTAMP_LEN 30
 #define STR_BLOCK_LEN 420
 
+/* ********************* *\
+|* Structures de Données *|
+\* ********************* */
+
 typedef struct s_blockchain Blockchain;
 typedef struct s_block Block;
+
+/* ************* *\
+|* Constructeurs *|
+\* ************* */
 
 /**
  * Initialisation d'une Blockchain.
@@ -30,6 +38,26 @@ Blockchain *blockchain(int difficulty);
  */
 Block *block();
 
+/* ************ *\
+|* Destructeurs *|
+\* ************ */
+
+/**
+ * Désalloue tout le contenu d'un block. Ne désalloue pas le block en lui-même.
+ * @param b Block à supprimer
+ */
+void freeBlockContent(Block *b);
+
+/**
+ * Désalloue totalement une Blockchain ainsi que tout son contenu.
+ * @param bc Blockchain à désallouer
+ */
+void freeBlockchain(Blockchain *bc);
+
+/* ******************* *\
+|* Opérateurs de Block *|
+\* ******************* */
+
 /**
  * Revoie le hash du block.
  * @return Hash du block
@@ -42,19 +70,6 @@ char *getBlockHash(Block *b);	//TODO je crois que ça sert à rien
  * @param transaction Transaction à ajouter
  */
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]);
-
-/**
- * Transforme un block en chaîne de caractères.
- * @param b Block à transformer
- * @return Block transformé
- */
-char *blockToString(const Block *b);
-
-/**
- * Affiche le contenu de la blockchain sur la sortie standard.
- * @param bc Blockchain dont il faut afficher le contenu.
- */
-void afficherBlockchain(Blockchain *bc);
 
 /**
  * Renvoie le hash du block donné sur 32 octets.
@@ -84,6 +99,10 @@ void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficu
  */
 void calcBlockMerkleRoot(Block *b);
 
+/* ************************ *\
+|* Opérateurs de Blockchain *|
+\* ************************ */
+
 /**
  * Ajoute le block Génésis à une blockchain vide.
  * @param bc Blockchain
@@ -96,6 +115,23 @@ void addGenesis(Blockchain *bc);
  * @param b Block à ajouter
  */
 void addBlock(Blockchain *bc, Block *b);
+
+/* *************************** *\
+|* Fonctions de Transformation *|
+\* *************************** */
+
+/**
+ * Transforme un block en chaîne de caractères.
+ * @param b Block à transformer
+ * @return Block transformé
+ */
+char *blockToString(const Block *b);
+
+/**
+ * Affiche le contenu de la blockchain sur la sortie standard.
+ * @param bc Blockchain dont il faut afficher le contenu.
+ */
+void afficherBlockchain(Blockchain *bc);
 
 /* ************************* *\
 |* Fonctions de Vérification *|
@@ -124,6 +160,13 @@ int verifBlockchain(Blockchain *b);
  */
 int verifMerkleRoot(Blockchain *b);
 
+/**
+ * Affiche un message en fonction du code de validité d'une Blockchain.
+ * Note: transformer les codes de retour pour pouvoir localiser les erreurs?
+ * @param code Code de retour à analyser
+ */
+void messageValidite(int code);
+
 /* ****************** *\
 |* Fonctions de Cheat *|
 \* ****************** */
@@ -135,7 +178,7 @@ int verifMerkleRoot(Blockchain *b);
  * @param num Index du block à supprimer
  * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int CheatBlock(Blockchain *b, int num);
+int cheatBlock(Blockchain *b, int num);
 
 /**
  * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain) , avec Vérification 2 en sortie,
@@ -145,6 +188,6 @@ int CheatBlock(Blockchain *b, int num);
  * @param numT Numéro de la transaction à supprimer
  * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int CheatTransaction(Blockchain *b, int numB, int numT);
+int cheatTransaction(Blockchain *b, int numB, int numT);
 
 #endif /* BLOCKCHAIN_H_ */

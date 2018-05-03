@@ -116,37 +116,3 @@ void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE*2 + 1
 	delete_deque(newList);
 	delete_deque(nextList);
 }	//Bon c'est pas joli-joli mais ça devrait fonctionner
-
-///TODO Mettra ça dans un fichier à part, genre randomGeneration.c
-
-/**
- * Génère une transaction aléatoire
- * @return Pointeur vers la transaction aléatoire
- */
-/*char *randomTransaction() {
-	char *result = malloc(TRANSACTION_LEN * sizeof(char));
-
-	srand(time(NULL));
-	sprintf(result, "%s -> %s: %d DCC.", randomElement(MEMBERS, 15*sizeof(char), 5),
-										 randomElement(MEMBERS, 15*sizeof(char), 5),
-										 rand()%100);
-
-	return result;
-}
-*/
-// Chasse (Nicolas) Generation transactions random
-/**
- * Génère une liste de transactions aléatoires.
- * @return Une liste de transactions aléatoires.
- */
-/*TransactionList *randomTransactionList() {
-	TransactionList *tl = deque();
-	srand(time(NULL));
-	int max = rand() % (MAX_TRANSACTIONS+1);
-
-	for (int i = 0; i < max; i++)
-			addTransaction(tl, randomTransaction());
-
-	return tl;
-} //TODO A modifier pour faire des vraies transactions aléatoires
-*/

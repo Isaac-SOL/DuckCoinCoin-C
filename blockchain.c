@@ -16,6 +16,10 @@
 #include "transaction.h"
 #include "util.h"
 
+/* ********************* *\
+|* Structures de Données *|
+\* ********************* */
+
 /**
  * Structure de données représentant un bloc
  */
@@ -36,6 +40,10 @@ struct s_blockchain {
 	int difficulty;
 	Deque *blocks;
 };
+
+/* ************* *\
+|* Constructeurs *|
+\* ************* */
 
 /**
  * Initialisation d'une Blockchain.
@@ -86,6 +94,38 @@ Block *block() {
 	return b;
 }
 
+/* ************ *\
+|* Destructeurs *|
+\* ************ */
+
+/**
+ * Désalloue tout le contenu d'un block. Ne désalloue pas le block en lui-même.
+ * @param b Block à supprimer
+ */
+void freeBlockContent(Block *b) {
+    free(b->timestamp);
+    free(b->previousHash);
+    free(b->currentHash);
+    free(b->merkleRoot);
+    delete_deque(b->transactions);
+    //Note: pas de free(b), sera fait par delete_deque()
+}
+
+/**
+ * Désalloue totalement une Blockchain ainsi que tout son contenu.
+ * @param bc Blockchain à désallouer
+ */
+void freeBlockchain(Blockchain *bc) {
+    for (int i = 0; i < dequeSize(bc->blocks); i++)
+        freeBlockContent((Block *) ith(bc->blocks, i));
+    delete_deque(bc->blocks);
+    free(bc);
+}
+
+/* ******************* *\
+|* Opérateurs de Block *|
+\* ******************* */
+
 /**
  * Revoie le hash du block.
  * @return Hash du block
@@ -102,6 +142,97 @@ char *getBlockHash(Block *b) {	//TODO je crois que ça sert à rien
 void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
 	addTransaction(b->transactions, transaction);
 }
+
+/**
+ * Renvoie le hash du block donné sur 32 octets.
+ * @param b Pointeur vers le block à lire
+ * @param hash Reçoit le hash du bloc en sortie
+ */
+void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1]) {
+	sha256ofString((BYTE *) blockToString(b), hash);
+}
+
+/**
+ * Vérifie que le hash reçu corresponde bien à la difficulté.
+ * @param hash Hash à vérifier
+ * @param difficulty Difficulté à satisfaire
+ * @return Booléen, renvoie true si le hash correspond, false sinon.
+ */
+int verifyHash(const char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
+	for (int i = 0; i < difficulty; i++)
+		if (hash[i] != '0')
+			return 0;
+	return 1;
+}
+
+/**
+ * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficulté.
+ * @param b Pointeur vers le block à modifier
+ * @param hash Renvoie le hash du bloc une fois la nonce trouvée
+ * @param difficulty Difficulté de la blockchain
+ */
+void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
+	b->nonce = 0;
+	calcBlockHash(b, hash);
+	while (!verifyHash(hash, difficulty)) {
+		(b->nonce)++;
+		calcBlockHash(b, hash);
+	}
+}
+
+/**
+ * Calcule la Merkle Root des transactions du block et la range dans la variable à cet effet
+ */
+void calcBlockMerkleRoot(Block *b) {
+	calcMerkleRoot(b->transactions, b->merkleRoot);
+}
+
+/* ************************ *\
+|* Opérateurs de Blockchain *|
+\* ************************ */
+
+/**
+ * Ajoute le block Génésis à une blockchain vide.
+ * @param bc Blockchain
+ */
+void addGenesis(Blockchain *bc) {
+	assert(dequeEmpty(bc->blocks));
+	Block *b = block();
+	b->index = 0;
+	strcpy(b->previousHash, "0");
+
+	char *transaction = malloc(TRANSACTION_LEN * sizeof(char));
+	strcpy(transaction, "Genesis");
+	addTransactionToBlock(b, transaction);
+
+	calcBlockMerkleRoot(b);
+	calcBlockHash(b, b->currentHash);
+
+	push_front(bc->blocks, b);
+}
+
+/**
+ * Ajoute un block à une Blockchain.
+ * @param bc Pointeur vers la blockchain à modifier
+ * @param b Block à ajouter
+ */
+void addBlock(Blockchain *bc, Block *b) {
+
+	//Ajout des informations liées à la Blockchain
+	b->index = dequeSize(bc->blocks);
+	strcpy(b->previousHash, ((Block *) front(bc->blocks))->currentHash);
+	calcBlockMerkleRoot(b);
+
+	//Calcul du hash
+	calcTrueBlockHash(b, b->currentHash, bc->difficulty);
+
+	//Ajout du bloc à la blockchain
+	push_front(bc->blocks, b);
+}
+
+/* *************************** *\
+|* Fonctions de Transformation *|
+\* *************************** */
 
 /**
  * Transforme un block en chaîne de caractères.
@@ -155,89 +286,6 @@ void afficherBlockchain(Blockchain *bc) {
 	dequeMap(bc->blocks, afficherBlock);
 }
 
-/**
- * Renvoie le hash du block donné sur 32 octets.
- * @param b Pointeur vers le block à lire
- * @param hash Reçoit le hash du bloc en sortie
- */
-void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1]) {
-	sha256ofString((BYTE *) blockToString(b), hash);
-}
-
-/**
- * Vérifie que le hash reçu corresponde bien à la difficulté.
- * @param hash Hash à vérifier
- * @param difficulty Difficulté à satisfaire
- * @return Booléen, renvoie true si le hash correspond, false sinon.
- */
-int verifyHash(const char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
-	for (int i = 0; i < difficulty; i++)
-		if (hash[i] != '0')
-			return 0;
-	return 1;
-}
-
-/**
- * Incrémente la nonce d'un block jusqu'à ce que son hash corresponde à la difficulté.
- * @param b Pointeur vers le block à modifier
- * @param hash Renvoie le hash du bloc une fois la nonce trouvée
- * @param difficulty Difficulté de la blockchain
- */
-void calcTrueBlockHash(Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1], int difficulty) {
-	b->nonce = 0;
-	calcBlockHash(b, hash);
-	while (!verifyHash(hash, difficulty)) {
-		(b->nonce)++;
-		calcBlockHash(b, hash);
-	}
-}
-
-/**
- * Calcule la Merkle Root des transactions du block et la range dans la variable à cet effet
- */
-void calcBlockMerkleRoot(Block *b) {
-	calcMerkleRoot(b->transactions, b->merkleRoot);
-}
-
-/**
- * Ajoute le block Génésis à une blockchain vide.
- * @param bc Blockchain
- */
-void addGenesis(Blockchain *bc) {
-	assert(dequeEmpty(bc->blocks));
-	Block *b = block();
-	b->index = 0;
-	strcpy(b->previousHash, "0");
-
-	char *transaction = malloc(TRANSACTION_LEN * sizeof(char));
-	strcpy(transaction, "Genesis");
-	addTransactionToBlock(b, transaction);
-
-	calcBlockMerkleRoot(b);
-	calcBlockHash(b, b->currentHash);
-
-	push_front(bc->blocks, b);
-}
-
-/**
- * Ajoute un block à une Blockchain.
- * @param bc Pointeur vers la blockchain à modifier
- * @param b Block à ajouter
- */
-void addBlock(Blockchain *bc, Block *b) {
-
-	//Ajout des informations liées à la Blockchain
-	b->index = dequeSize(bc->blocks);
-	strcpy(b->previousHash, ((Block *) front(bc->blocks))->currentHash);
-	calcBlockMerkleRoot(b);
-
-	//Calcul du hash
-	calcTrueBlockHash(b, b->currentHash, bc->difficulty);
-
-	//Ajout du bloc à la blockchain
-	push_front(bc->blocks, b);
-}
-
 /* ************************* *\
 |* Fonctions de Vérification *|
 \* ************************* */
@@ -271,7 +319,7 @@ int verifBlockchain(Blockchain *b) {
 
 	/* Parcourt tous les blocks sauf le génésis qui sera testé après le for
 	 * Note: La fonction serait plus optimisée si on pouvait profiter des pointeurs entre les blocs.
-	 * Éventuellement penser à créer une fonction map_reduce() pour nos deque */
+	 * Éventuellement penser à créer une fonction iterator pour nos deque */
 	for (int i = dequeSize(d)-1; i > -1; i--) {
 		block = ith(d, i);
 		/* test hash des blocks */
@@ -312,6 +360,34 @@ int verifMerkleRoot(Blockchain *b) {
 	return 0;
 }
 
+/**
+ * Affiche un message en fonction du code de validité d'une Blockchain.
+ * Note: transformer les codes de retour pour pouvoir localiser les erreurs?
+ * @param code Code de retour à analyser
+ */
+void messageValidite(int code) {
+    switch (code) {
+        case 0:
+            printf("La blockchain est valide.\n");
+            break;
+
+        case 1:
+            printf("La blockchain est invalide.\nLe premier Block n'est pas le Génésis.\n");
+            break;
+
+        case 2:
+            printf("La blockchain est invalide.\nIl y a une erreur de chaînage des hashes.\n");
+            break;
+
+        case 3:
+            printf("La blockchain est invalide.\nUn des hash de Block est incorrect.\n");
+            break;
+
+        default:
+            printf("La blockchain a une erreur surprenante.\n");
+    }
+}
+
 /* ****************** *\
 |* Fonctions de Cheat *|
 \* ****************** */
@@ -323,7 +399,7 @@ int verifMerkleRoot(Blockchain *b) {
  * @param num Index du block à supprimer
  * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int CheatBlock(Blockchain *b, int num) {
+int cheatBlock(Blockchain *b, int num) {
 	double temps;
 	clock_t start;
 	start = clock();
@@ -385,7 +461,7 @@ int CheatBlock(Blockchain *b, int num) {
  * @param numT Numéro de la transaction à supprimer
  * @return 0 si la blockchain est toujours valide après suppression, >0 sinon
  */
-int CheatTransaction(Blockchain *b, int numB, int numT) {
+int cheatTransaction(Blockchain *b, int numB, int numT) {
 	double temps;
 	clock_t start;
 	start = clock();
