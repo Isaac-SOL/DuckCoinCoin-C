@@ -352,6 +352,7 @@ int verifMerkleRoot(Blockchain *b) {
 	for (i = 0; i < dequeSize(d); i++) {
 		block = ith(d, i);
 		calcMerkleRoot(block->transactions, root);
+		printf("\n");
 		if (compByte(block->merkleRoot, root) != 0) {
 			return 1;
 		}
@@ -444,7 +445,7 @@ void cheatTransaction(Blockchain *b, int numB, int numT) {
 		Block *t = ith(b->blocks, numB);
 
 		int i;
-		if (numT < dequeSize(t->transactions) && numT >= 0) { //Vérification de l'index de transaction
+		if (numT < dequeSize(t->transactions) && numT >= 0 && dequeSize(t->transactions) > 1) { //Vérification de l'index de transaction
 			printf("Suppression de la transaction #%d dans le Block #%d\n", numT, numB);
 			t->transactions = remove_at(t->transactions, numT); //Suppression
 
@@ -464,7 +465,7 @@ void cheatTransaction(Blockchain *b, int numB, int numT) {
 			printf("Temps d'execution : %.2f secondes\n\n", temps);
 
 		}
-		else printf("La Transaction #%d n'existe pas dans le Block #%d. Aucune modification effectuee.\n", numT, numB);
+		else printf("La Transaction #%d n'existe pas ou est la seule dans le Block #%d.\nAucune modification effectuee.\n", numT, numB);
 	}
 	else printf("Le Block #%d n'existe pas. Aucune modification effectuee.\n", numB);
 }

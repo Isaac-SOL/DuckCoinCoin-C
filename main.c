@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 		int mode = 0, opt1, opt2;
 
 		while (mode != 3) {
-			printf("Indiquez le mode d'action, puis les options si necessaires:\n");
+			printf("\n\nIndiquez le mode d'action, puis les options si necessaires:\n");
 			printf("Mode 0: Affichage de la Blockchain\n");
 			printf("Mode 1: Suppression d'un block.  Option 1: Index du block a supprimer\n");
 			printf("Mode 2: Suppression d'une transaction.  Option 1: Index du block a modifier,  Option 2: Index de la transaction a supprimer\n");
@@ -139,6 +139,7 @@ int main(int argc, char *argv[]) {
 					fflush(stdin);
 					cheatBlock(bc, opt1);
 					messageValidite(verifBlockchain(bc));
+					printf(verifMerkleRoot(bc) ? "Erreur dans une Merkle Root!\n" : "Pas d'erreur dans les Merkle Roots.\n");
 					//maj JSON
 					break;
 
@@ -148,6 +149,7 @@ int main(int argc, char *argv[]) {
 					fflush(stdin);
 					cheatTransaction(bc, opt1, opt2);
 					messageValidite(verifBlockchain(bc));
+					printf(verifMerkleRoot(bc) ? "Erreur dans une Merkle Root!\n" : "Pas d'erreur dans les Merkle Roots.\n");
 					//maj JSON
 					break;
 

@@ -90,12 +90,12 @@ void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE*2 + 1
 			char *cat = malloc((SHA256_BLOCK_SIZE*4 + 3) * sizeof(char));
 			char *nextValue;
 			nextValue = front(newList);
-			pop_front(newList);
 			memcpy(cat, nextValue, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+			pop_front(newList);
 			if (!dequeEmpty(newList)) {
 				nextValue = front(newList);
-				pop_front(newList);
 				memcpy(cat + (SHA256_BLOCK_SIZE*2 + 1), nextValue, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
+				pop_front(newList);
 			} else memcpy(cat + (SHA256_BLOCK_SIZE*2 + 1), cat, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
 			cat[SHA256_BLOCK_SIZE*4 + 2] = '\0'; //NULL-terminated pour utiliser la fonction sha256OfString()
 
