@@ -83,9 +83,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	//Temporaire, pour test
-	printf("Status:\n-b : %d\n-d : %d\n-i : %s\n-c : %s\n-o : %s\n", nbBlocks, difficulty, infile ? infile : "false", cheat ? "true" : "false", outfile ? outfile : "false");
-
 	//Vérification de la cohérence des paramètres
 	if ((nbBlocks > 0 || difficulty > 0) && infile) {
 		printf("Erreur: Syntaxe incorrecte.\n");
@@ -202,6 +199,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+	freeBlockchain(bc);
 
 	return 0;
 }

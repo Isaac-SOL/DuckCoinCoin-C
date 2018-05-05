@@ -89,7 +89,7 @@ Block *block() {
 		exit(1);
 	}
 	b->transactions = deque();
-	b->timestamp = getTimeStamp();	//TODO est-ce qu'on fait ça ici ou à l'ajout dans la blockchain?
+	b->timestamp = getTimeStamp();
 	b->nonce = 0;
 
 	return b;
@@ -150,7 +150,9 @@ void addTransactionToBlock(Block *b, char transaction[TRANSACTION_LEN]) {
  * @param hash Reçoit le hash du bloc en sortie
  */
 void calcBlockHash(const Block *b, char hash[SHA256_BLOCK_SIZE*2 + 1]) {
-	sha256ofString((BYTE *) blockToString(b), hash);
+	char *str = blockToString(b);
+	sha256ofString((BYTE *) str, hash);
+	free(str);
 }
 
 /**
@@ -242,11 +244,14 @@ void addBlock(Blockchain *bc, Block *b) {
  */
 char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut travailler avec
 	char *result = malloc(STR_BLOCK_LEN * sizeof(char));
+	char *trstr = transactionsToString(b->transactions);
 	if (result == NULL) {
 		printf("Erreur d'allocation memoire pour blockToString.\n");
 		exit(1);
 	}
-	sprintf(result, "%d,%s,%s,%d,%s", b->index, transactionsToString(b->transactions), b->previousHash, b->nonce, b->merkleRoot);
+	sprintf(result, "[%d,%s,%s,%d,%s,%s,%d]", b->index, b->timestamp, b->previousHash, dequeSize(b->transactions),
+			trstr, b->merkleRoot, b->nonce);
+	free(trstr);
 	return result;
 }
 
@@ -353,7 +358,6 @@ int verifMerkleRoot(Blockchain *b) {
 	for (i = 0; i < dequeSize(d); i++) {
 		block = ith(d, i);
 		calcMerkleRoot(block->transactions, root);
-		printf("\n");
 		if (compByte(block->merkleRoot, root) != 0) {
 			return 1;
 		}
@@ -395,8 +399,7 @@ void messageValidite(int code) {
 \* ****************** */
 
 /**
- * Cheater de block (suppression d'un block dans la blockchain) , avec Vérification 1 en sortie,
- * exception pour le block génésis (position 0) le block suivant prendra le rôle du block génésis
+ * Cheater de block (suppression d'un block dans la blockchain)
  * @param b Blockchain à modifier
  * @param num Index du block à supprimer
  */
@@ -431,8 +434,7 @@ void cheatBlock(Blockchain *b, int num) {
 }
 
 /**
- * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain) , avec Vérification 2 en sortie,
- * exception pour le block génésis (position 0)
+ * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain)
  * @param b Blockchain à modifier
  * @param numB Numéro du block à modifier
  * @param numT Numéro de la transaction à supprimer
@@ -449,6 +451,7 @@ void cheatTransaction(Blockchain *b, int numB, int numT) {
 		if (numT < dequeSize(t->transactions) && numT >= 0 && dequeSize(t->transactions) > 1) { //Vérification de l'index de transaction
 			printf("Suppression de la transaction #%d dans le Block #%d\n", numT, numB);
 			t->transactions = remove_at(t->transactions, numT); //Suppression
+			calcBlockMerkleRoot(t);
 
 			i = numB;
 			Block *prevBlock, *nextBlock;
@@ -456,7 +459,6 @@ void cheatTransaction(Blockchain *b, int numB, int numT) {
 				printf("Re-minage du block #%d...\n", i);
 				nextBlock = ith(b->blocks, i);
 				prevBlock = ith(b->blocks, i-1);
-				calcBlockMerkleRoot(nextBlock);
 				nextBlock->previousHash = prevBlock->currentHash;
 				calcTrueBlockHash(nextBlock, nextBlock->currentHash, b->difficulty);
 				i++;

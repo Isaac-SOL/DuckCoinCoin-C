@@ -42,14 +42,16 @@ int transactionListIsFull(const TransactionList *tl) {
 char *transactionsToString(const TransactionList *tl) {
 	char *result = malloc(STR_TRANSACTIONLIST_LEN * sizeof(char));	//Fait dynamiquement pour garder le contenu à la sortie de la foncion
 	if (result == NULL) {
-		printf("Erreur d'allocation mémoire pour transactionsToString.\n");
+		printf("Erreur d'allocation memoire pour transactionsToString.\n");
 		exit(1);
 	}
 
-	result[0] = '\0';
+	memcpy(result, "[", 2 * sizeof(char));
 	for (int i = 0; i < dequeSize(tl); i++) {
 		strcat(result, ith(tl, i));	//TODO à transformer avec une fontion map() comme vu en SDD?
+		if (i < dequeSize(tl) - 1) strcat(result, ", ");
 	}
+	strcat(result, "]");
 
 	return result;
 }
@@ -79,7 +81,7 @@ void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE*2 + 1
 		char hash[SHA256_BLOCK_SIZE*2 + 1];
 		char *dhash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 		sha256ofString((BYTE *) ith(tl, i), hash);
-		memcpy(dhash, hash, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+		strcpy(dhash, hash);
 		push_back(newList, dhash);
 	}
 
@@ -87,23 +89,20 @@ void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE*2 + 1
 	while (dequeSize(newList) != 1) {
 		while (!dequeEmpty(newList)) {
 			//Création du bloc contenant la concaténation
-			char *cat = malloc((SHA256_BLOCK_SIZE*4 + 3) * sizeof(char));
-			char *nextValue;
-			nextValue = front(newList);
-			memcpy(cat, nextValue, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+			char *cat = malloc((SHA256_BLOCK_SIZE*4 + 1) * sizeof(char));
+
+			strcpy(cat, front(newList));
 			pop_front(newList);
 			if (!dequeEmpty(newList)) {
-				nextValue = front(newList);
-				memcpy(cat + (SHA256_BLOCK_SIZE*2 + 1), nextValue, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
+				strcat(cat, front(newList));
 				pop_front(newList);
-			} else memcpy(cat + (SHA256_BLOCK_SIZE*2 + 1), cat, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
-			cat[SHA256_BLOCK_SIZE*4 + 2] = '\0'; //NULL-terminated pour utiliser la fonction sha256OfString()
+			} else memcpy(cat + (SHA256_BLOCK_SIZE*2), cat, SHA256_BLOCK_SIZE*2 + 1 * sizeof(char));
 
 			//Cacul du hash et ajout à la liste
 			char hash[SHA256_BLOCK_SIZE*2 + 1];
 			char *dhash = malloc((SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
 			sha256ofString((BYTE *) cat, hash);
-			memcpy(dhash, hash, (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+			strcpy(dhash, hash);
 			push_back(nextList, dhash);
 		}
 		delete_deque(newList);
@@ -112,7 +111,7 @@ void calcMerkleRoot(const TransactionList *tl, char root[SHA256_BLOCK_SIZE*2 + 1
 	}
 
 	//Enregistrement du résultat et libération de la mémoire
-	memcpy(root, front(newList), (SHA256_BLOCK_SIZE*2 + 1) * sizeof(char));
+	strcpy(root, front(newList));
 	delete_deque(newList);
 	delete_deque(nextList);
 }	//Bon c'est pas joli-joli mais ça devrait fonctionner

@@ -13,7 +13,7 @@
 
 #define MAX_TRANSACTIONS 10
 #define TRANSACTION_LEN 40
-#define STR_TRANSACTIONLIST_LEN 330
+#define STR_TRANSACTIONLIST_LEN 400
 
 typedef Deque TransactionList;
 typedef char * Transaction;

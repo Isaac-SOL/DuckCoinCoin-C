@@ -16,10 +16,10 @@ JSONOBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(JSONSRC))
 #Options conditionnelles pour le débug
 ifeq ($(DEBUG),yes)
 	OPT += -g
-start: startDebug
+start: startDebug all
 else
 	OPT += -O3 -DNDEBUG
-start: startRelease
+start: startRelease all
 endif
 
 .PHONY: clean mrproper doc start
@@ -34,7 +34,7 @@ startRelease:
 	@echo Compilation en mode Release
 
 #Création de l'exécutable
-all: start $(OUTPUTDIR)/$(EXEC)
+all: $(OUTPUTDIR)/$(EXEC)
 
 #Création de la documentation
 doc:

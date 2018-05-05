@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "blockchain.h"
+
 /**
  * Renvoie la date à l'appel de la fonction.
  * @return date actuelle dans une chaîne de caractères
@@ -20,7 +22,12 @@
 char *getTimeStamp() {
 	time_t ltime;
 	time(&ltime);
-	char *t = ctime(&ltime);
+	char *t = malloc(TIMESTAMP_LEN * sizeof(char));
+	if (t == NULL) {
+		printf("Erreur d'allocation memoire pour block.\n");
+		exit(1);
+	}
+	strcpy(t, ctime(&ltime));
 	t[strlen(t) - 1] = '\0';
 	return t;
 }

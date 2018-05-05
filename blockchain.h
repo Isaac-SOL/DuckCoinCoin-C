@@ -13,7 +13,7 @@
 #include "transaction.h"
 
 #define TIMESTAMP_LEN 30
-#define STR_BLOCK_LEN 420
+#define STR_BLOCK_LEN 500
 
 /* ********************* *\
 |* Structures de Données *|
@@ -173,16 +173,14 @@ void messageValidite(int code);
 \* ****************** */
 
 /**
- * Cheater de block (suppression d'un block dans la blockchain) , avec Vérification 1 en sortie,
- * exception pour le block génésis (position 0) le block suivant prendra le rôle du block génésis
+ * Cheater de block (suppression d'un block dans la blockchain)
  * @param b Blockchain à modifier
  * @param num Index du block à supprimer
  */
 void cheatBlock(Blockchain *b, int num);
 
 /**
- * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain) , avec Vérification 2 en sortie,
- * exception pour le block génésis (position 0)
+ * Cheater de Transaction (suppression d'une transaction dans un block de la blockchain)
  * @param b Blockchain à modifier
  * @param numB Numéro du block à modifier
  * @param numT Numéro de la transaction à supprimer
