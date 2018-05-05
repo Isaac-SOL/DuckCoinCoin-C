@@ -589,8 +589,8 @@ Blockchain *BCfromJSON(json_value *value) {
 void TransactionsToJSON(TransactionList *tl, FILE *f) {
 	fprintf(f, "[\n");
 	for (int i = 0; i < dequeSize(tl) - 1; i++)
-		fprintf(f, "        \"%s\",\n", ith(tl, i));
-	fprintf(f, "        \"%s\"\n", back(tl));
+		fprintf(f, "        \"%s\",\n", (char *) ith(tl, i));
+	fprintf(f, "        \"%s\"\n", (char *) back(tl));
 	fprintf(f, "      ]");
 }
 

@@ -30,8 +30,8 @@ extern char *optarg;
  * @param exec Nom de l'exécutable
  */
 void correctUse(char *exec) {
-	printf("Utilisation: ./%s -b nbBlocks -d difficulté  [-c] [-o outJSONFile]\n", exec);
-	printf("OU:          ./%s -i inJSONFile  [-c [-o outJSONFile]]\n", exec);
+	printf("Utilisation: %s -b nbBlocks -d difficulte  [-c] [-o outJSONFile]\n", exec);
+	printf("OU:          %s -i inJSONFile  [-c [-o outJSONFile]]\n", exec);
 }
 
 int main(int argc, char *argv[]) {

@@ -1,6 +1,6 @@
 CC=gcc
 OPT=-Wall -std=c99
-OPTL=
+OPTL=-lm
 EXEC=duck_coin_coin
 COMPILDIR=compiled
 OUTPUTDIR=bin
