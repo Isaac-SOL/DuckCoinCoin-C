@@ -33,7 +33,7 @@
  * @return transaction aleatoire
  */
 Transaction random_trans(){
-	int i = (rand()%(330-1))+1;
+	int i = (rand()%(MAX_VALUE-1))+1;
 	Transaction t = malloc(TRANSACTION_LEN * sizeof(char));
 	sprintf(t, "Source-Destination: %d", i);
 	return t;

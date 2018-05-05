@@ -12,6 +12,7 @@
 #include "deque.h"
 
 #define MAX_TRANSACTIONS 10
+#define MAX_VALUE 32
 #define TRANSACTION_LEN 40
 #define STR_TRANSACTIONLIST_LEN 400
 

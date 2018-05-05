@@ -51,6 +51,8 @@ $(OUTPUTDIR)/$(EXEC): $(OBJ) $(SHAOBJ) $(JSONOBJ)
 #Nettoyage
 clean:
 	rm -rf $(COMPILDIR)/*.o
+	rm -rf $(COMPILDIR)/sha256/*.o
+	rm -rf $(COMPILDIR)/json/*.o
 
 mrproper: clean
 	rm -rf $(OUTPUTDIR)/$(EXEC)
