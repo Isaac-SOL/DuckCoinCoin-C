@@ -9,6 +9,7 @@
 #define BLOCKCHAIN_H_
 
 #include "sha256/sha256.h"
+#include "json/json.h"
 #include "transaction.h"
 
 #define TIMESTAMP_LEN 30
@@ -187,5 +188,16 @@ void cheatBlock(Blockchain *b, int num);
  * @param numT Numéro de la transaction à supprimer
  */
 void cheatTransaction(Blockchain *b, int numB, int numT);
+
+/* **** *\
+|* JSON *|
+\* **** */
+
+/**
+ * Crée une Blockchain à partr de la json_value donnée si elle est compatible.
+ * @param value json_value représentant une Blockchain
+ * @return La blockchain créée
+ */
+Blockchain *BCfromJSON(json_value *value);
 
 #endif /* BLOCKCHAIN_H_ */

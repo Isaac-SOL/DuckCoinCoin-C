@@ -22,7 +22,7 @@
  */
 void addTransaction(TransactionList *tl, Transaction transaction) {
 	assert(!transactionListIsFull(tl));
-	push_front(tl, transaction);
+	push_back(tl, transaction);
 }
 
 /**

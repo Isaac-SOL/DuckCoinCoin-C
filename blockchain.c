@@ -12,6 +12,7 @@
 #include <time.h>
 
 #include "sha256/sha256_utils.h"
+#include "json/json.h"
 #include "blockchain.h"
 #include "transaction.h"
 #include "util.h"
@@ -468,4 +469,112 @@ void cheatTransaction(Blockchain *b, int numB, int numT) {
 		else printf("La Transaction #%d n'existe pas ou est la seule dans le Block #%d.\nAucune modification effectuee.\n", numT, numB);
 	}
 	else printf("Le Block #%d n'existe pas. Aucune modification effectuee.\n", numB);
+}
+
+/* **** *\
+|* JSON *|
+\* **** */
+
+/**
+ * Transforme une json_value en TransactionList si elle est compatible.
+ * @param tl TransactionList vide
+ * @param value json_value représentant une TransactionList
+ */
+void TransactionsFromJSON(TransactionList *tl, json_value *value) {
+
+	if (value->type != json_array) {
+		printf("Erreur : Transactions non array\n");
+		return;
+	}
+
+	for (int i = 0; i < value->u.array.length; i++) {
+		Transaction t = malloc(TRANSACTION_LEN * sizeof(char));
+		strcpy(t, value->u.array.values[i]->u.string.ptr);
+		addTransaction(tl, t);
+	}
+}
+
+/**
+ * Transforme une json_value en Block si elle est compatible.
+ * @param b Block vide
+ * @param value json_value représentant un Block
+ */
+void BlockFromJSON(Block *b, json_value *value) {
+
+	if (value->type != json_object) {
+		printf("Erreur : Block non object\n");
+		return;
+	}
+
+	for (int i = 0; i < value->u.object.length; i++) {
+
+		if (!strcmp(value->u.object.values[i].name, "index")) {
+			b->index = value->u.object.values[i].value->u.integer;
+
+		} else if (!strcmp(value->u.object.values[i].name, "timestamp")) {
+			strcpy(b->timestamp, value->u.object.values[i].value->u.string.ptr);
+
+		} else if (!strcmp(value->u.object.values[i].name, "nonce")) {
+			b->nonce = value->u.object.values[i].value->u.integer;
+
+		} else if (!strcmp(value->u.object.values[i].name, "hash")) {
+			memcpy(b->currentHash, value->u.object.values[i].value->u.string.ptr, SHA256_BLOCK_SIZE*2 + 1);
+
+		} else if (!strcmp(value->u.object.values[i].name, "prevHash")) {
+			memcpy(b->previousHash, value->u.object.values[i].value->u.string.ptr, SHA256_BLOCK_SIZE*2 + 1);
+
+		} else if (!strcmp(value->u.object.values[i].name, "merkleRoot")) {
+			memcpy(b->merkleRoot, value->u.object.values[i].value->u.string.ptr, SHA256_BLOCK_SIZE*2 + 1);
+
+		} else if (!strcmp(value->u.object.values[i].name, "transactions")) {
+			TransactionsFromJSON(b->transactions, value->u.object.values[i].value);
+		}
+
+	}
+
+}
+
+/**
+ * Transforme une json_value en liste de Blocks si elle est compatible.
+ * @param blocks Liste de Blocks vide
+ * @param value json_value représentant une liste de Blocks
+ */
+void BlocksFromJSON(Deque *blocks, json_value *value) {
+
+	if (value->type != json_array) {
+		printf("Erreur : Blocks non array\n");
+		return;
+	}
+
+	for (int i = 0; i < value->u.array.length; i++) {
+		Block *b = block();
+		BlockFromJSON(b, value->u.array.values[i]);
+		push_back(blocks, b);
+	}
+}
+
+/**
+ * Crée une Blockchain à partr de la json_value donnée si elle est compatible.
+ * @param value json_value représentant une Blockchain
+ * @return La blockchain créée
+ */
+Blockchain *BCfromJSON(json_value *value) {
+	Blockchain *bc = blockchain(1);
+
+	if (value->type != json_object) {
+		printf("Erreur : Blockchain non object\n");
+		return NULL;
+	}
+
+	for (int i = 0; i < value->u.object.length; i++) {
+		if (!strcmp(value->u.object.values[i].name, "difficulte")) {
+			bc->difficulty = value->u.object.values[i].value->u.integer;
+		} else if (!strcmp(value->u.object.values[i].name, "blocks")) {
+			BlocksFromJSON(bc->blocks, value->u.object.values[i].value);
+		}
+	}
+
+	json_value_free(value);
+
+	return bc;
 }

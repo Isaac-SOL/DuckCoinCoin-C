@@ -10,6 +10,8 @@ HDR=$(wildcard *.h)
 OBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(SRC))
 SHASRC=$(wildcard sha256/*.c)
 SHAOBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(SHASRC))
+JSONSRC=$(wildcard json/*.c)
+JSONOBJ=$(patsubst %.c,$(COMPILDIR)/%.o,$(JSONSRC))
 
 #Options conditionnelles pour le débug
 ifeq ($(DEBUG),yes)
@@ -43,7 +45,7 @@ $(COMPILDIR)/%.o: %.c
 	$(CC) $(OPT) -c $< -o $@
 
 #Création de l'exécutable
-$(OUTPUTDIR)/$(EXEC): $(OBJ) $(SHAOBJ)
+$(OUTPUTDIR)/$(EXEC): $(OBJ) $(SHAOBJ) $(JSONOBJ)
 	$(CC) $(OPT) -o $@ $^ $(OPTL)
 
 #Nettoyage
@@ -58,8 +60,8 @@ $(COMPILDIR)/randomGen.o: sha256/sha256_utils.h blockchain.h deque.h transaction
 
 $(COMPILDIR)/sha256.o: sha256/sha256.h
 
-$(COMPILDIR)/blockchain.o: util.h blockchain.h sha256/sha256.h transaction.h
+$(COMPILDIR)/blockchain.o: util.h blockchain.h sha256/sha256.h transaction.h json/json.h
 
 $(COMPILDIR)/transaction.o: util.h transaction.h sha256/sha256.h
 
-$(COMPILDIR)/main.o: util.h blockchain.h sha256/sha256.h transaction.h randomGen.h
+$(COMPILDIR)/main.o: util.h blockchain.h sha256/sha256.h transaction.h randomGen.h json/json.h

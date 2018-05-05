@@ -11,6 +11,7 @@
 #include <getopt.h>
 
 #include "sha256/sha256.h"
+#include "json/json.h"
 #include "blockchain.h"
 #include "transaction.h"
 #include "randomGen.h"
@@ -102,8 +103,22 @@ int main(int argc, char *argv[]) {
 	if (nbBlocks > 0) { //Cas génération de blockchain
 		bc = random_blockchain(difficulty, nbBlocks); //Ajouter les arguments difficulté et nombre de blocks!
 	} else { //Cas lecture de fichier JSON
-		printf("La lecture de fichiers JSON n'est pas encore supportee.\n");
-		exit(0);
+		FILE *f = fopen(infile, "r");
+		if (f == NULL) {
+			printf("Erreur dans l'ouverture du fichier %s.\n", infile);
+			perror(NULL);
+			exit(2);
+		}
+		fseek(f, 0, SEEK_END);
+		int size = ftell(f);
+		char *infileContent = malloc (size * sizeof(char));
+		fseek(f, 0, SEEK_SET);
+		printf("Lecture...\n");
+		fread(infileContent, sizeof(char), size, f);
+		printf("Parsing...\n");
+		bc = BCfromJSON(json_parse(infileContent, size));
+		fclose(f);
+		free(infileContent);
 	}
 
 	afficherBlockchain(bc);
@@ -121,12 +136,13 @@ int main(int argc, char *argv[]) {
 		printf("\n\n+----------------+\n|CONSOLE DE CHEAT|\n+----------------+\n");
 		int mode = 0, opt1, opt2;
 
-		while (mode != 3) {
+		while (mode != 4) {
 			printf("\n\nIndiquez le mode d'action, puis les options si necessaires:\n");
 			printf("Mode 0: Affichage de la Blockchain\n");
 			printf("Mode 1: Suppression d'un block.  Option 1: Index du block a supprimer\n");
 			printf("Mode 2: Suppression d'une transaction.  Option 1: Index du block a modifier,  Option 2: Index de la transaction a supprimer\n");
-			printf("Mode 3: Quitter le programme\n");
+			printf("Mode 3: Verification de l'integrite de la Blockchain\n");
+			printf("Mode 4: Quitter le programme\n");
 			scanf("%d", &mode);
 			switch (mode) {
 				case 0: //Affichage de la Blockchain
@@ -138,8 +154,6 @@ int main(int argc, char *argv[]) {
 					scanf("%d", &opt1);
 					fflush(stdin);
 					cheatBlock(bc, opt1);
-					messageValidite(verifBlockchain(bc));
-					printf(verifMerkleRoot(bc) ? "Erreur dans une Merkle Root!\n" : "Pas d'erreur dans les Merkle Roots.\n");
 					//maj JSON
 					break;
 
@@ -148,12 +162,15 @@ int main(int argc, char *argv[]) {
 					scanf("%d", &opt2);
 					fflush(stdin);
 					cheatTransaction(bc, opt1, opt2);
-					messageValidite(verifBlockchain(bc));
-					printf(verifMerkleRoot(bc) ? "Erreur dans une Merkle Root!\n" : "Pas d'erreur dans les Merkle Roots.\n");
 					//maj JSON
 					break;
 
-				case 3: //Quitter le programme
+				case 3: //Vérification de la Blockchain
+					messageValidite(verifBlockchain(bc));
+					printf(verifMerkleRoot(bc) ? "Erreur dans une Merkle Root!\n" : "Pas d'erreur dans les Merkle Roots.\n");
+					break;
+
+				case 4: //Quitter le programme
 					printf("Fermeture de la console de cheat.\n");
 					break;
 
