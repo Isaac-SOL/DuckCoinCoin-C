@@ -45,6 +45,7 @@ Deque *deque() {
 		printf("Erreur d'allocation mémoire pour deque()\n");
 		exit(1);
 	}
+	d->sent->data = malloc(1); //Pour permettre la libération
 
 	d->sent->next = d->sent;
 	d->sent->prev = d->sent;

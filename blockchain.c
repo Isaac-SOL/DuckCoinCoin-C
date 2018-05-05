@@ -256,15 +256,6 @@ char *blockToString(const Block *b) {	//TODO sûrement à revoir, mais on peut t
 }
 
 /**
- * Affiche un hash.
- * @param hash Hash à afficher.
- */
-void afficherHash(char hash[SHA256_BLOCK_SIZE*2 + 1]) {
-	for (int i = 0; i < SHA256_BLOCK_SIZE*2 + 1; i++)
-		printf("%c", hash[i]);
-}
-
-/**
  * Affiche le contenu d'un block. Peut être utilisé par dequeMap().
  * @param vb Block à afficher.
  */
@@ -274,13 +265,10 @@ void afficherBlock(void *vb) {
 	printf("Cree le %s\n", b->timestamp);
 	printf("Transactions:\n");
 	dequeMap(b->transactions, afficherTransaction);
-	printf("Hash:           ");
-	afficherHash(b->currentHash);
-	printf("\nHash Precedent: ");
-	afficherHash(b->previousHash);
-	printf("\nMerkle Root:    ");
-	afficherHash(b->merkleRoot);
-	printf("\nNonce: %d\n\n", b->nonce);
+	printf("Hash:           %s\n", b->currentHash);
+	printf("Hash Precedent: %s\n", b->previousHash);
+	printf("Merkle Root:    %s\n", b->merkleRoot);
+	printf("Nonce: %d\n\n", b->nonce);
 }
 
 /**
@@ -295,19 +283,6 @@ void afficherBlockchain(Blockchain *bc) {
 /* ************************* *\
 |* Fonctions de Vérification *|
 \* ************************* */
-
-/**
- * Comparaison de deux hash : 0 = aucune différence, 1 sinon
- * @param chaine1 premier hash à comparer
- * @param chaine2 second hash à comparer
- * @return 0 si aucune différence, 1 sinon
- */
-int compByte(char *chaine1, char *chaine2) {
-	for (int i = 0; i < SHA256_BLOCK_SIZE*2 + 1; i++)
-		if (chaine1[i] != chaine2[i])
-			return 1;
-	return 0;
-}
 
 /**
  * vérification 1 : la chaîne commece bien par le bloc génésis et que le
@@ -330,11 +305,11 @@ int verifBlockchain(Blockchain *b) {
 		block = ith(d, i);
 		/* test hash des blocks */
 		calcBlockHash(block, hash);
-		if (compByte(hash, block->currentHash) != 0) {
+		if (strcmp(hash, block->currentHash) != 0) {
 			return 3;
 		}
 		/* test chaînage des hash */
-		if (compByte(getBlockHash(block), prevHash) != 0) {
+		if (strcmp(getBlockHash(block), prevHash) != 0) {
 			return 2;
 		}
 		if ( i!= 0) prevHash = block->previousHash;
@@ -358,7 +333,7 @@ int verifMerkleRoot(Blockchain *b) {
 	for (i = 0; i < dequeSize(d); i++) {
 		block = ith(d, i);
 		calcMerkleRoot(block->transactions, root);
-		if (compByte(block->merkleRoot, root) != 0) {
+		if (strcmp(block->merkleRoot, root) != 0) {
 			return 1;
 		}
 	}
