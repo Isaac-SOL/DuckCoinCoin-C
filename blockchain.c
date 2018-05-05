@@ -578,3 +578,62 @@ Blockchain *BCfromJSON(json_value *value) {
 
 	return bc;
 }
+
+/**
+ * Écrit le contenu du la TransactionList donnée au format JSON dans le fichier donné.
+ * @param tl TransactionList à transformer
+ * @param f Fichier dans lequel écrire
+ */
+void TransactionsToJSON(TransactionList *tl, FILE *f) {
+	fprintf(f, "[\n");
+	for (int i = 0; i < dequeSize(tl) - 1; i++)
+		fprintf(f, "        \"%s\",\n", ith(tl, i));
+	fprintf(f, "        \"%s\"\n", back(tl));
+	fprintf(f, "      ]");
+}
+
+/**
+ * Écrit le contenu du Block donné au format JSON dans le fichier donné.
+ * @param b Block à transformer
+ * @param f Fichier dans lequel écrire
+ */
+void BlockToJSON(Block *b, FILE *f) {
+	fprintf(f, "    {\n");
+	fprintf(f, "      \"index\": %d,\n", b->index);
+	fprintf(f, "      \"nonce\": %d,\n", b->nonce);
+	fprintf(f, "      \"timestamp\": \"%s\",\n", b->timestamp);
+	fprintf(f, "      \"hash\": \"%s\",\n", b->currentHash);
+	fprintf(f, "      \"prevHash\": \"%s\",\n", b->previousHash);
+	fprintf(f, "      \"merkleRoot\": \"%s\",\n", b->merkleRoot);
+	fprintf(f, "      \"transactions\": ");
+	TransactionsToJSON(b->transactions, f);
+	fprintf(f, "\n    }");
+}
+
+/**
+ * Écrit le contenu de la liste de Blocks donnée au format JSON dans le fichier donné.
+ * @param blocks liste de Blocks à transformer
+ * @param f Fichier dans lequel écrire
+ */
+void BlocksToJSON(Deque *blocks, FILE *f) {
+	fprintf(f, "[\n");
+	for (int i = 0; i < dequeSize(blocks) - 1; i++) {
+		BlockToJSON(ith(blocks, i), f);
+		fprintf(f, ",\n");
+	}
+	BlockToJSON(back(blocks), f);
+	fprintf(f, "\n  ]");
+}
+
+/**
+ * Écrit le contenu de la Blockchain donnée au format JSON dans le fichier donné.
+ * @param bc Blockchain à transformer
+ * @param f Fichier dans lequel écrire
+ */
+void BCtoJSON(Blockchain *bc, FILE *f) {
+	fprintf(f, "{\n");
+	fprintf(f, "  \"difficulte\": %d,\n", bc->difficulty);
+	fprintf(f, "  \"blocks\": ");
+	BlocksToJSON(bc->blocks, f);
+	fprintf(f, "\n}\n");
+}

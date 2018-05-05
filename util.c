@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * Renvoie la date à l'appel de la fonction.
@@ -19,7 +20,9 @@
 char *getTimeStamp() {
 	time_t ltime;
 	time(&ltime);
-	return ctime(&ltime);
+	char *t = ctime(&ltime);
+	t[strlen(t) - 1] = '\0';
+	return t;
 }
 
 /**

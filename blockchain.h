@@ -200,4 +200,11 @@ void cheatTransaction(Blockchain *b, int numB, int numT);
  */
 Blockchain *BCfromJSON(json_value *value);
 
+/**
+ * Écrit le contenu de la Blockchain donnée au format JSON dans le fichier donné.
+ * @param bc Blockchain à transformer
+ * @param f Fichier dans lequel écrire
+ */
+void BCtoJSON(Blockchain *bc, FILE *f);
+
 #endif /* BLOCKCHAIN_H_ */

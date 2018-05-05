@@ -126,8 +126,14 @@ int main(int argc, char *argv[]) {
 	/* Deuxième étape: Écriture dans un fichier JSON le cas échéant */
 
 	if (outfile && !infile) {
-		printf("La création de fichiers JSON n'est pas encore supportee.\n");
-		exit(0);
+		FILE *f = fopen(outfile, "w");
+		if (f == NULL) {
+			printf("Erreur dans l'ouverture du fichier %s.\n", outfile);
+			perror(NULL);
+			exit(2);
+		}
+		BCtoJSON(bc, f);
+		fclose(f);
 	}
 
 	/* Troisième étape: Cheat le cas échéant, et mise à jour du fichier JSON le cas échéant */
@@ -136,13 +142,14 @@ int main(int argc, char *argv[]) {
 		printf("\n\n+----------------+\n|CONSOLE DE CHEAT|\n+----------------+\n");
 		int mode = 0, opt1, opt2;
 
-		while (mode != 4) {
+		while (mode != 5) {
 			printf("\n\nIndiquez le mode d'action, puis les options si necessaires:\n");
 			printf("Mode 0: Affichage de la Blockchain\n");
 			printf("Mode 1: Suppression d'un block.  Option 1: Index du block a supprimer\n");
 			printf("Mode 2: Suppression d'une transaction.  Option 1: Index du block a modifier,  Option 2: Index de la transaction a supprimer\n");
 			printf("Mode 3: Verification de l'integrite de la Blockchain\n");
-			printf("Mode 4: Quitter le programme\n");
+			if (outfile) printf("Mode 4: Enregistrer dans le fichier JSON\n");
+			printf("Mode 5: Quitter le programme\n");
 			scanf("%d", &mode);
 			switch (mode) {
 				case 0: //Affichage de la Blockchain
@@ -170,7 +177,23 @@ int main(int argc, char *argv[]) {
 					printf(verifMerkleRoot(bc) ? "Erreur dans une Merkle Root!\n" : "Pas d'erreur dans les Merkle Roots.\n");
 					break;
 
-				case 4: //Quitter le programme
+				case 4: //Écrire dans le fichier de sortie
+					if (outfile) {
+						printf("Ecriture dans le fichier %s.", outfile);
+						FILE *f = fopen(outfile, "w");
+						if (f == NULL) {
+							printf("Erreur dans l'ouverture du fichier %s.\n", outfile);
+							perror(NULL);
+							exit(2);
+						}
+						BCtoJSON(bc, f);
+						fclose(f);
+					} else {
+						printf("Aucun fichier de sortie n'a ete donne en argument.\nUtilisez l'option -i pour specifier un fichier de sortie.\n");
+					}
+					break;
+
+				case 5: //Quitter le programme
 					printf("Fermeture de la console de cheat.\n");
 					break;
 
